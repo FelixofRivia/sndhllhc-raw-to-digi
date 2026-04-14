@@ -7,8 +7,8 @@ namespace sndhllhc {
         public:
             T const* product() const { return (present_ ? &obj_ : nullptr); }
         private:
+            bool present_{};
             T obj_;
-            bool present_;
     };
 }
 
