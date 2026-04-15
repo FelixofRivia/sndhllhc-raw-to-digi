@@ -35,7 +35,7 @@ int main(){
                 size_t raw_size = feds[fed_index].data_.size();
                 std::cout << "fed index: " << fed_index << "\tsize: " << raw_size << "\n";
                 for (size_t raw_index{0}; raw_index < raw_size; ++raw_index) {
-                    printf("raw index: %u data: %hhu \n", raw_index, feds[fed_index].data_[raw_index]);
+                    printf("raw index: %lu data: %hhu \n", raw_index, feds[fed_index].data_[raw_index]);
                 }
             }
         }
