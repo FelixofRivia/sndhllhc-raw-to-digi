@@ -53,12 +53,12 @@ int main(){
             if (feds[fed_index].data_.size() > 0) {
                 size_t raw_size = feds[fed_index].data_.size();
                 for (size_t raw_index{0}; raw_index < raw_size; raw_index += 8) {
-                    // Equivalent to writing 8 bytes in line (right to left)
-                    unsigned long long int data{0};
+                    // Equivalent to writing 8 bytes in line in hex (right to left)
+                    std::string data;
                     for (size_t byte_index{raw_index}; byte_index < raw_index + 8; ++byte_index) {
-                        data += (std::pow(256, byte_index % 8) * static_cast<int>(feds[fed_index].data_[byte_index]));
+                        data = to_hex(static_cast<int>(feds[fed_index].data_[byte_index]), 2) + data;
                     }
-                    std::string csv_row = std::to_string(i+1) + std::string(",") + std::to_string(fed_index) + std::string(",") + to_hex(raw_index / 8, 4) + std::string(",") + to_hex(data, 16) + std::string("\n");
+                    std::string csv_row = std::to_string(i+1) + std::string(",") + std::to_string(fed_index) + std::string(",") + to_hex(raw_index / 8, 4) + std::string(",") + data + std::string("\n");
                     output_csv_file << csv_row;
                 }
             }
