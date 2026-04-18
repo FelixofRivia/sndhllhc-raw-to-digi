@@ -1,5 +1,5 @@
 using namespace std;
-#include "SNDHLLHCHeaders.h"
+#include "SNDHLLHCRawHeaders.h"
 
 #ifndef edm__Wrapper_FEDRawDataCollection__cxx
 #define edm__Wrapper_FEDRawDataCollection__cxx

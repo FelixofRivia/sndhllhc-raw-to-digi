@@ -1,8 +1,8 @@
-add_executable(check_raw check_raw.cxx ${CMAKE_SOURCE_DIR}/src/SNDHLLHCSource.cxx)
+add_executable(check_raw check_raw.cxx ${CMAKE_SOURCE_DIR}/src/raw/SNDHLLHCRawSource.cxx)
 target_link_libraries(check_raw PRIVATE ${ROOT_LIBRARIES})
-target_include_directories(check_raw PRIVATE ${ROOT_INCLUDE_DIRS} ${CMAKE_SOURCE_DIR}/include)
+target_include_directories(check_raw PRIVATE ${ROOT_INCLUDE_DIRS} ${CMAKE_SOURCE_DIR}/include/raw)
 
-ROOT_GENERATE_DICTIONARY(SNDHLLHCDict_check_raw SNDHLLHCHeaders.h LINKDEF ${CMAKE_SOURCE_DIR}/include/SNDHLLHCLinkDef.hxx MODULE check_raw)
+ROOT_GENERATE_DICTIONARY(SNDHLLHCDict_check_raw SNDHLLHCRawHeaders.h LINKDEF ${CMAKE_SOURCE_DIR}/include/raw/SNDHLLHCRawLinkDef.hxx MODULE check_raw)
 
 add_custom_target(  
   copy_test_data  

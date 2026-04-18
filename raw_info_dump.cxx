@@ -5,7 +5,7 @@
 #include "TFile.h"
 #include "TTree.h"
 
-#include "SNDHLLHCHeaders.h"
+#include "SNDHLLHCRawHeaders.h"
 
 int main(){
     std::string input_path = "/home/filippo/raw_to_digi/raw_data/run1000779/run1000779.root";
