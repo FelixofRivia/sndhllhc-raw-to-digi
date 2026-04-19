@@ -1,5 +1,5 @@
 using namespace std;
-#include "SNDHLLHCRawHeaders.h"
+#include "SiStripIOHeaders.h"
 
 #ifndef edm__Wrapper_FEDRawDataCollection__cxx
 #define edm__Wrapper_FEDRawDataCollection__cxx

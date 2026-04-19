@@ -4,3 +4,5 @@
 #include "FEDRawDataCollection.h"
 #include "edm__DoNotRecordParents.h"
 #include "FEDRawData.h"
+
+#include "SiStripDigi.h"

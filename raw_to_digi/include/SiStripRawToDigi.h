@@ -1,8 +1,7 @@
 #ifndef SNDHLLHC_SISTRIPRAWTODIGI_H
 #define SNDHLLHC_SISTRIPRAWTODIGI_H
 
-#include "SNDHLLHCDigiHeaders.h"
-#include "SNDHLLHCRawHeaders.h"
+#include "SiStripIOHeaders.h"
 #include <vector>
 
 class SiStripRawToDigi {

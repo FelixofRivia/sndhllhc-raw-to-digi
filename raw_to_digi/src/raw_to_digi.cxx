@@ -4,7 +4,7 @@
 #include <string>
 #include "ROOT/RDataFrame.hxx"
 
-#include "SNDHLLHCRawHeaders.h"
+#include "SiStripIOHeaders.h"
 #include "SiStripRawToDigi.h"
 
 int main(){
