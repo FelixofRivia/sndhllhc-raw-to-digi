@@ -7,8 +7,13 @@
 
 #include "SiStripIOHeaders.h"
 
-int main(){
-    std::string input_path = "/home/filippo/raw_to_digi/raw_data/run1000779/run1000779.root";
+int main(int argc, char* argv[]){
+    if (argc != 2) {
+        std::cerr << "1 argument expected but " << argc - 1 << " provided\n";
+        std::cerr << "Usage: raw_info_dump <input_root_path>";
+        return 1;
+    }
+    std::string input_path(argv[1]);
     std::unique_ptr<TFile> input_raw_file( TFile::Open(input_path.c_str(), "READ") );
 
     auto input_raw_tree = input_raw_file->Get<TTree>("Events");

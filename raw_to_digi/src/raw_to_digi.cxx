@@ -7,9 +7,14 @@
 #include "SiStripIOHeaders.h"
 #include "SiStripRawToDigi.h"
 
-int main(){
-    std::string input_path = "./../tests/data/run_1000779_raw.root";
-    std::string output_path = "./../tests/data/run_1000779_digi.root";
+int main(int argc, char* argv[]){
+    if (argc != 3) {
+        std::cerr << "2 arguments expected but " << argc - 1 << " provided\n";
+        std::cerr << "Usage: raw_to_digi <input_path> <output_path>";
+        return 1;
+    }
+    std::string input_path(argv[1]);
+    std::string output_path(argv[2]);
     auto df = ROOT::RDataFrame("Events", input_path);
     // df.Describe().Print();
     auto df2 = df.Define("FedChannelDigis", SiStripRawToDigi(), {"FEDRawDataCollection_rawDataCollector__LHC."});
