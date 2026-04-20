@@ -6,6 +6,8 @@ add_compile_options(-Wall -Wextra -Wpedantic)
 
 find_package(ROOT 6.36 REQUIRED COMPONENTS Core RIO Tree ROOTDataFrame)
 
+enable_testing()
+
 add_subdirectory(${CMAKE_SOURCE_DIR}/raw_info)
 add_subdirectory(${CMAKE_SOURCE_DIR}/raw_to_digi)
 add_subdirectory(${CMAKE_SOURCE_DIR}/tests)

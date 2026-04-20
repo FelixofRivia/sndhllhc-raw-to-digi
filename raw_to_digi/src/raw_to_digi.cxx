@@ -8,8 +8,8 @@
 #include "SiStripRawToDigi.h"
 
 int main(){
-    std::string input_path = "./tests/data/run_1000779_raw.root";
-    std::string output_path = "./tests/data/run_1000779_digi.root";
+    std::string input_path = "./../tests/data/run_1000779_raw.root";
+    std::string output_path = "./../tests/data/run_1000779_digi.root";
     auto df = ROOT::RDataFrame("Events", input_path);
     // df.Describe().Print();
     auto df2 = df.Define("FedChannelDigis", SiStripRawToDigi(), {"FEDRawDataCollection_rawDataCollector__LHC."});
