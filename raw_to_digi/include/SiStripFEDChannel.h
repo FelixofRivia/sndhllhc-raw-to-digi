@@ -1,18 +1,20 @@
 #ifndef SNDHLLHC_SISTRIPFEDCHANNEL_H
 #define SNDHLLHC_SISTRIPFEDCHANNEL_H
 
+
+#include "SiStripFEDChannel.h"
+
+#include <cstdint>
+
 //holds information about position of a channel in the buffer for use by unpacker
 class FEDChannel {
     public:
-        enum class ZSROMode { nonLite = 7, lite = 2 };
-        constexpr FEDChannel(const uint8_t* const data, const uint32_t offset, const uint16_t length);
-        constexpr FEDChannel(const uint8_t* const data, const uint32_t offset, const ZSROMode zsRoMode);
         //gets length from first 2 bytes (assuming normal FED channel)
-        constexpr FEDChannel(const uint8_t* const data, const uint32_t offset);
+        constexpr FEDChannel(const uint8_t* const data, const uint32_t offset) : data_(data), offset_(offset), length_(data[(offset) ^ 7] + (data[(offset + 1) ^ 7] << 8)) {}
         constexpr uint16_t stripsInCh(uint8_t num_bits) const;
-        constexpr uint16_t length() const;
-        constexpr const uint8_t* data() const;
-        constexpr uint32_t offset() const;
+        constexpr uint16_t length() const { return length_; }
+        constexpr const uint8_t* data() const { return data_; }
+        constexpr uint32_t offset() const { return offset_; }
         /**
             * Retrieve the APV CM median for a non-lite zero-suppressed channel
             *
@@ -22,27 +24,18 @@ class FEDChannel {
             */
         constexpr uint16_t cmMedian(const uint8_t apvIndex) const;
         //third byte of channel data for normal FED channels
-        constexpr uint8_t packetCode() const;
+        constexpr uint8_t packetCode() const { return data_[(offset_ + 2) ^ 7]; }
 
     private:
-        friend class FEDBuffer;
+        //friend class FEDBuffer;
         const uint8_t* data_;
         uint32_t offset_;
         uint16_t length_;
         uint8_t headerLen_ = 0;
 };
 
-constexpr FEDChannel::FEDChannel(const uint8_t* const data, const uint32_t offset, const ZSROMode zsRoMode)
-    : data_(data), offset_(offset), headerLen_(zsRoMode == ZSROMode::nonLite ? 7 : 2) {
-    length_ = (data_[(offset_) ^ 7] + (data_[(offset_ + 1) ^ 7] << 8));
-}
 
-constexpr FEDChannel::FEDChannel(const uint8_t* const data, const uint32_t offset) : data_(data), offset_(offset) {
-    length_ = (data_[(offset_) ^ 7] + (data_[(offset_ + 1) ^ 7] << 8));
-}
-
-constexpr FEDChannel::FEDChannel(const uint8_t* const data, const uint32_t offset, const uint16_t length)
-    : data_(data), offset_(offset), length_(length) {}
+// constexpr FEDChannel::FEDChannel(const uint8_t* const data, const uint32_t offset) : data_(data), offset_(offset), lenght_(data[(offset) ^ 7] + (data[(offset + 1) ^ 7] << 8)) {}
 
 constexpr uint16_t FEDChannel::stripsInCh(uint8_t num_bits) const {
     const bool emptyCh = (headerLen_ + 2) >= (length_);
@@ -59,10 +52,6 @@ constexpr uint16_t FEDChannel::stripsInCh(uint8_t num_bits) const {
     return stripN;
 }
 
-constexpr uint16_t FEDChannel::length() const { return length_; }
-
-constexpr uint8_t FEDChannel::packetCode() const { return data_[(offset_ + 2) ^ 7]; }
-
 constexpr uint16_t FEDChannel::cmMedian(const uint8_t apvIndex) const {
     uint16_t result = 0;
     //CM median is 10 bits with lowest order byte first. First APV CM median starts in 4th byte of channel data
@@ -70,9 +59,5 @@ constexpr uint16_t FEDChannel::cmMedian(const uint8_t apvIndex) const {
     result |= (((data_[(offset_ + 4 + 2 * apvIndex) ^ 7]) << 8) & 0x300);
     return result;
 }
-
-constexpr const uint8_t* FEDChannel::data() const { return data_; }
-
-constexpr uint32_t FEDChannel::offset() const { return offset_; }
 
 #endif
