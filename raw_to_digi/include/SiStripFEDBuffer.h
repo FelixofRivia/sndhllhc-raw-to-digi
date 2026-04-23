@@ -10,10 +10,10 @@
 //class representing standard (non-spy channel) FED buffers
 class FEDBuffer {
   public:
-    explicit FEDBuffer(const FEDRawData& fedBuffer, const bool allowBadBuffer = false);
+    explicit FEDBuffer(const FEDRawData& fedBuffer);
 
     void findChannels();
-    const FEDChannel& channel(const uint8_t internalFEDChannelNum) const;
+    const FEDChannel& channel(const uint8_t internalFEDChannelNum) const { return channels_[internalFEDChannelNum];}
 
   private:
     const uint8_t* getPointerToDataAfterTrackerSpecialHeader() const;

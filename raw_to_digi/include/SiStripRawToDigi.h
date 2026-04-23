@@ -28,8 +28,8 @@ std::vector<SiStripDigi> SiStripRawToDigi::operator()(const edm::Wrapper<FEDRawD
     FEDBuffer buffer(data);
     buffer.findChannels();
     // LOOP ON FED CHANNELS
-    for (uint16_t i_ch{0}; i_ch < FEDCH_PER_FED; ++i_ch) {
-        FEDChannel channel = buffer.channel(i_ch);
+    for (uint8_t i_ch{0}; i_ch < FEDCH_PER_FED; ++i_ch) {
+        auto channel = buffer.channel(i_ch);
         // const uint8_t pCode = buffer.packetCode(legacy_, iconn->fedCh()); only needed for bits_shift
     
         const uint16_t stripStart{0};

@@ -4,7 +4,7 @@
 
 #include <cstdint>
 
-FEDBuffer::FEDBuffer(const FEDRawData& fedBuffer, const bool allowBadBuffer) : originalBuffer_(fedBuffer.data()), bufferSize_(fedBuffer.size()) {
+FEDBuffer::FEDBuffer(const FEDRawData& fedBuffer) : originalBuffer_(fedBuffer.data()), bufferSize_(fedBuffer.size()) {
 
   //swap the buffer words so that the whole buffer is in slink ordering
   uint8_t* newBuffer = new uint8_t[bufferSize_];
@@ -40,13 +40,9 @@ inline const uint8_t* FEDBuffer::getPointerToByteAfterEndOfPayload() const {
   return orderedBuffer_ + bufferSize_ - 8;
 }
 
-inline const FEDChannel& FEDBuffer::channel(const uint8_t internalFEDChannelNum) const {
-    return channels_[internalFEDChannelNum];
-}
-
 void FEDBuffer::findChannels() {
   //set min length to 2 for ZSLite, 7 for ZS and 3 for raw
-  uint16_t minLength{7};
+  //uint16_t minLength{7};
   uint16_t offsetBeginningOfChannel = 0;
   for (uint16_t i = 0; i < FEDCH_PER_FED; i++) {
     channels_.emplace_back(payloadPointer_, offsetBeginningOfChannel);
