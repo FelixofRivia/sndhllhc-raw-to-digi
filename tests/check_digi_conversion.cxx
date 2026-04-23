@@ -10,7 +10,7 @@
 #include "SiStripIOHeaders.h"
 #include "SiStripRawToDigi.h"
 
-// .csv table: event number (+1 wrt tree), fed number, 8 bytes index (hex), 8 bytes (hex)
+// .csv table: event number, detector id, strip, adc
 
 int main(int argc, char* argv[]){
     if (argc != 3) {
@@ -35,6 +35,8 @@ int main(int argc, char* argv[]){
 
     auto df = ROOT::RDataFrame("Events", input_root_path);
     auto df2 = df.Define("FedChannelDigis", SiStripRawToDigi(), {"FEDRawDataCollection_rawDataCollector__LHC."});
+
+    df2.Range(2,0).Display({"FedChannelDigis"})->Print();
 
     size_t csv_row_index{0};
 

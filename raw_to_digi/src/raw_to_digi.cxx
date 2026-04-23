@@ -18,5 +18,5 @@ int main(int argc, char* argv[]){
     auto df = ROOT::RDataFrame("Events", input_path);
     // df.Describe().Print();
     auto df2 = df.Define("FedChannelDigis", SiStripRawToDigi(), {"FEDRawDataCollection_rawDataCollector__LHC."});
-    df2.Snapshot("Events", output_path, {"FedChannelDigis"});
+    df2.Range(2,0).Snapshot("Events", output_path, {"FedChannelDigis"});
 }
