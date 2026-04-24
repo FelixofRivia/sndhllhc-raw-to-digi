@@ -36,9 +36,17 @@ int main(int argc, char* argv[]){
     auto df = ROOT::RDataFrame("Events", input_root_path);
     auto df2 = df.Define("FedChannelDigis", SiStripRawToDigi(), {"FEDRawDataCollection_rawDataCollector__LHC."});
 
-    df2.Range(2,0).Display({"FedChannelDigis"})->Print();
-
+    //df2.Range(2,3).Display({"FedChannelDigis"})->Print();
     size_t csv_row_index{0};
+    auto print_line = [&csv_row_index](std::vector<SiStripDigi> digis){ 
+        for (const auto& digi : digis) {
+            if (digi.adc()>0) std::cout << csv_row_index << "," << digi.strip() << "," << digi.adc() << "\n";
+        }
+        csv_row_index++;
+    };
+    df2.Range(3,4).Foreach(print_line, {"FedChannelDigis"});
+
+    
 
     // for(int i{0}; i < input_raw_tree->GetEntries() && i < 10; ++i){
     //     input_raw_tree->GetEntry(i);

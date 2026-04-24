@@ -15,8 +15,12 @@ int main(int argc, char* argv[]){
     }
     std::string input_path(argv[1]);
     std::string output_path(argv[2]);
+
+    ROOT::RDF::RSnapshotOptions opts;
+    opts.fOutputFormat = ROOT::RDF::ESnapshotOutputFormat::kRNTuple;
+
     auto df = ROOT::RDataFrame("Events", input_path);
     // df.Describe().Print();
     auto df2 = df.Define("FedChannelDigis", SiStripRawToDigi(), {"FEDRawDataCollection_rawDataCollector__LHC."});
-    df2.Range(2,0).Snapshot("Events", output_path, {"FedChannelDigis"});
+    df2.Snapshot("Events", output_path, {"FedChannelDigis"}, opts);
 }
