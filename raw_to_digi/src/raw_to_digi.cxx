@@ -10,7 +10,7 @@
 int main(int argc, char* argv[]){
     if (argc != 3) {
         std::cerr << "2 arguments expected but " << argc - 1 << " provided\n";
-        std::cerr << "Usage: raw_to_digi <input_path> <output_path>";
+        std::cerr << "Usage: raw_to_digi <input_path> <output_path>\n";
         return 1;
     }
     std::string input_path(argv[1]);

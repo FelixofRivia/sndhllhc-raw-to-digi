@@ -15,7 +15,7 @@
 int main(int argc, char* argv[]){
     if (argc != 3) {
         std::cerr << "2 arguments expected but " << argc - 1 << " provided\n";
-        std::cerr << "Usage: check_raw_read <input_root_path> <input_csv_path>";
+        std::cerr << "Usage: check_raw_read <input_root_path> <input_csv_path>\n";
         return 1;
     }
 
