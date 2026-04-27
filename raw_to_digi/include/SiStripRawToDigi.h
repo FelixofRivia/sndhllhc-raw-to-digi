@@ -30,6 +30,9 @@ std::vector<SiStripDigi> SiStripRawToDigi::operator()(const edm::Wrapper<FEDRawD
     // LOOP ON FED CHANNELS
     for (uint8_t i_ch{0}; i_ch < FEDCH_PER_FED; ++i_ch) {
         auto channel = buffer.channel(i_ch);
+        if (channel.length() == 0) {
+            continue;
+        }
         // const uint8_t pCode = buffer.packetCode(legacy_, iconn->fedCh()); only needed for bits_shift
     
         const uint16_t stripStart{0};
@@ -51,13 +54,10 @@ std::vector<SiStripDigi> SiStripRawToDigi::operator()(const edm::Wrapper<FEDRawD
                 nInCluster = data[(offset++) ^ 7];
                 inCluster = 0;
             }
-            digis.emplace_back(SiStripDigi(stripStart + firstStrip + inCluster, getADC_W<num_words>(data, offset, bits_shift)));
+            // Use i_ch as det_id, for the moment
+            digis.emplace_back(SiStripDigi(stripStart + firstStrip + inCluster, getADC_W<num_words>(data, offset, bits_shift), i_ch));
             offset += num_words;
             ++inCluster;
-        }
-
-        for (uint16_t i{0}; i < 4; ++i) {
-            digis.emplace_back(SiStripDigi(i, 2*i + 1));
         }
     }
     return digis;
