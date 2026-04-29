@@ -10,6 +10,7 @@ enable_testing()
 
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
 
+add_subdirectory(${CMAKE_SOURCE_DIR}/sistrip_io)
 add_subdirectory(${CMAKE_SOURCE_DIR}/raw_info)
 add_subdirectory(${CMAKE_SOURCE_DIR}/raw_to_digi)
 add_subdirectory(${CMAKE_SOURCE_DIR}/tests)
