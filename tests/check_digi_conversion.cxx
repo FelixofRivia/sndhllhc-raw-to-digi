@@ -38,7 +38,7 @@ int main(int argc, char* argv[]){
 
     //df2.Range(2,3).Display({"FedChannelDigis"})->Print();
     size_t csv_row_index{0};
-    auto print_line = [&csv_row_index](std::vector<SiStripDigi> digis){ 
+    auto print_line = [&csv_row_index](const std::vector<SiStripDigi>& digis){ 
         for (const auto& digi : digis) {
             if (digi.adc()>0) std::cout << csv_row_index << "," << digi.id() << "," << digi.strip() << "," << digi.adc() << "\n";
         }
