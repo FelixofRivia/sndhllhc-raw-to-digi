@@ -11,13 +11,15 @@
 #include "SiStripRawToDigi.h"
 
 int main(int argc, char* argv[]){
-    if (argc != 3) {
-        std::cerr << "2 arguments expected but " << argc - 1 << " provided\n";
-        std::cerr << "Usage: raw_to_digi <input_path> <output_directory>\n";
+    if (argc != 4) {
+        std::cerr << "3 arguments expected but " << argc - 1 << " provided\n";
+        std::cerr << "Usage: raw_to_digi <input_path> <output_directory> <n_treads>\n";
         return 1;
     }
     std::string input_path(argv[1]);
     std::string output_directory(argv[2]);
+
+    ROOT::EnableImplicitMT(std::stoi(argv[3]));
 
     auto extract_adc = [](const std::vector<SiStripDigi>& digis) {
         std::vector<uint16_t> adcs;
