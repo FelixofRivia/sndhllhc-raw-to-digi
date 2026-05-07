@@ -5,3 +5,4 @@ target_include_directories(raw_to_digi PRIVATE ${ROOT_INCLUDE_DIRS} ${CMAKE_CURR
 add_executable(real_time_monitoring ${CMAKE_CURRENT_SOURCE_DIR}/src/real_time_monitoring.cxx ${CMAKE_CURRENT_SOURCE_DIR}/src/SiStripFEDBuffer.cxx)
 target_link_libraries(real_time_monitoring PRIVATE ${ROOT_LIBRARIES} sistrip_io)
 target_include_directories(real_time_monitoring PRIVATE ${ROOT_INCLUDE_DIRS} ${CMAKE_CURRENT_SOURCE_DIR}/include ${CMAKE_SOURCE_DIR}/sistrip_io)
+target_compile_definitions(real_time_monitoring PRIVATE USE_ROOT7_RHIST=$<BOOL:${USE_ROOT7_RHIST}>)
