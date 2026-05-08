@@ -1,38 +1,29 @@
 #include "SiStripFEDBuffer.h"
 #include "SiStripFEDChannel.h"
 #include "SiStripHardwareConstants.h"
+#include "FEDFullDebugHeader.h"
 
 #include <cstdint>
 
 FEDBuffer::FEDBuffer(const FEDRawData& fedBuffer) : originalBuffer_(fedBuffer.data()), bufferSize_(fedBuffer.size()) {
 
-  // //swap the buffer words so that the whole buffer is in slink ordering
-  // uint8_t* newBuffer = new uint8_t[bufferSize_];
-  // const uint32_t* originalU32 = reinterpret_cast<const uint32_t*>(originalBuffer_);
-  // const size_t sizeU32 = bufferSize_ / 4;
-  // uint32_t* newU32 = reinterpret_cast<uint32_t*>(newBuffer);
-
-  // //copy DAQ header
-  // memcpy(newU32, originalU32, 8);
-  // //copy DAQ trailer
-  // memcpy(newU32 + sizeU32 - 2, originalU32 + sizeU32 - 2, 8);
-  // //swap the payload
-  // for (size_t i = 2; i < sizeU32 - 2; i += 2) {
-  //   newU32[i] = originalU32[i + 1];
-  //   newU32[i + 1] = originalU32[i];
-  // }
   orderedBuffer_ = originalBuffer_;
-  //construct header object at begining of buffer
-  // daqHeader_ = FEDDAQHeader(orderedBuffer_);
-  // //construct trailer object using last 64 bit word of buffer
-  // daqTrailer_ = FEDDAQTrailer(orderedBuffer_ + bufferSize_ - 8);
-
   validChannels_ = 0;
+  
   channels_.reserve(FEDCH_PER_FED);
   const size_t header_lenght_in_bytes{128};
-  //feHeader_ = FEDFEHeader::newFEHeader(headerType(), getPointerToDataAfterTrackerSpecialHeader());
+  feHeader_ = std::unique_ptr<FEDFEHeader>(new FEDFullDebugHeader(getPointerToDataAfterTrackerSpecialHeader()));
   payloadPointer_ = getPointerToDataAfterTrackerSpecialHeader() + header_lenght_in_bytes;
   payloadLength_ = getPointerToByteAfterEndOfPayload() - payloadPointer_;
+
+  if (feHeader_) {
+    for (uint8_t iFE = 0; iFE < FEUNITS_PER_FED; ++iFE) {
+      if (feHeader_->fePresent(iFE))
+        fePresent_[iFE] = true;
+      else
+        fePresent_[iFE] = false;
+    }
+  }
 }
 
 inline const uint8_t* FEDBuffer::getPointerToDataAfterTrackerSpecialHeader() const { return orderedBuffer_ + 16; }
@@ -67,17 +58,8 @@ void FEDBuffer::findChannels() {
   }
 }
 
-inline uint16_t FEDBuffer::feUnitLength(const uint8_t internalFEUnitNum) const
-  {
-    return ( (feWord(internalFEUnitNum)[15]<<8) | (feWord(internalFEUnitNum)[14]) );
-  }
+inline bool FEDBuffer::fePresent(uint8_t internalFEUnitNum) const { return fePresent_[internalFEUnitNum]; }
 
-inline bool FEDBuffer::fePresent(const uint8_t internalFEUnitNum) const
-  {
-    return (feUnitLength(internalFEUnitNum) != 0);
-  }
-
-inline const uint8_t* FEDBuffer::feWord(const uint8_t internalFEUnitNum) const
-  {
-    return header_+internalFEUnitNum*2*8;
-  }
+// inline bool FEDBufferBase::feEnabled(const uint8_t internalFEUnitNum) const {
+//   return specialHeader_.feEnabled(internalFEUnitNum);
+// }

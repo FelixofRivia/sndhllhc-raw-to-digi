@@ -16,9 +16,7 @@ class FEDBuffer {
     const FEDChannel& channel(const uint8_t internalFEDChannelNum) const { return channels_[internalFEDChannelNum];}
 
   private:
-    uint16_t feUnitLength(const uint8_t internalFEUnitNum) const;
-    bool fePresent(const uint8_t internalFEUnitNum) const;
-    const uint8_t* feWord(const uint8_t internalFEUnitNum) const;
+    bool fePresent(uint8_t internalFEUnitNum) const;
     const uint8_t* getPointerToDataAfterTrackerSpecialHeader() const;
     const uint8_t* getPointerToByteAfterEndOfPayload() const;
     std::vector<FEDChannel> channels_;
@@ -27,10 +25,11 @@ class FEDBuffer {
     const size_t bufferSize_;
     // FEDDAQHeader daqHeader_;
     // FEDDAQTrailer daqTrailer_;
-    // std::unique_ptr<FEDFEHeader> feHeader_;
+    std::unique_ptr<FEDFEHeader> feHeader_;
     const uint8_t* payloadPointer_;
     uint16_t payloadLength_;
     uint8_t validChannels_;
+    bool fePresent_[FEUNITS_PER_FED];
 };
 
   
