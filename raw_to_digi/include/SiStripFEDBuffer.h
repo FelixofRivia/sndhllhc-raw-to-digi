@@ -16,6 +16,9 @@ class FEDBuffer {
     const FEDChannel& channel(const uint8_t internalFEDChannelNum) const { return channels_[internalFEDChannelNum];}
 
   private:
+    uint16_t feUnitLength(const uint8_t internalFEUnitNum) const;
+    bool fePresent(const uint8_t internalFEUnitNum) const;
+    const uint8_t* feWord(const uint8_t internalFEUnitNum) const;
     const uint8_t* getPointerToDataAfterTrackerSpecialHeader() const;
     const uint8_t* getPointerToByteAfterEndOfPayload() const;
     std::vector<FEDChannel> channels_;

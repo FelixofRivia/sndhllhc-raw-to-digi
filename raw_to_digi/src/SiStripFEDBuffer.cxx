@@ -6,22 +6,22 @@
 
 FEDBuffer::FEDBuffer(const FEDRawData& fedBuffer) : originalBuffer_(fedBuffer.data()), bufferSize_(fedBuffer.size()) {
 
-  //swap the buffer words so that the whole buffer is in slink ordering
-  uint8_t* newBuffer = new uint8_t[bufferSize_];
-  const uint32_t* originalU32 = reinterpret_cast<const uint32_t*>(originalBuffer_);
-  const size_t sizeU32 = bufferSize_ / 4;
-  uint32_t* newU32 = reinterpret_cast<uint32_t*>(newBuffer);
+  // //swap the buffer words so that the whole buffer is in slink ordering
+  // uint8_t* newBuffer = new uint8_t[bufferSize_];
+  // const uint32_t* originalU32 = reinterpret_cast<const uint32_t*>(originalBuffer_);
+  // const size_t sizeU32 = bufferSize_ / 4;
+  // uint32_t* newU32 = reinterpret_cast<uint32_t*>(newBuffer);
 
-  //copy DAQ header
-  memcpy(newU32, originalU32, 8);
-  //copy DAQ trailer
-  memcpy(newU32 + sizeU32 - 2, originalU32 + sizeU32 - 2, 8);
-  //swap the payload
-  for (size_t i = 2; i < sizeU32 - 2; i += 2) {
-    newU32[i] = originalU32[i + 1];
-    newU32[i + 1] = originalU32[i];
-  }
-  orderedBuffer_ = newBuffer;
+  // //copy DAQ header
+  // memcpy(newU32, originalU32, 8);
+  // //copy DAQ trailer
+  // memcpy(newU32 + sizeU32 - 2, originalU32 + sizeU32 - 2, 8);
+  // //swap the payload
+  // for (size_t i = 2; i < sizeU32 - 2; i += 2) {
+  //   newU32[i] = originalU32[i + 1];
+  //   newU32[i + 1] = originalU32[i];
+  // }
+  orderedBuffer_ = originalBuffer_;
   //construct header object at begining of buffer
   // daqHeader_ = FEDDAQHeader(orderedBuffer_);
   // //construct trailer object using last 64 bit word of buffer
@@ -29,8 +29,9 @@ FEDBuffer::FEDBuffer(const FEDRawData& fedBuffer) : originalBuffer_(fedBuffer.da
 
   validChannels_ = 0;
   channels_.reserve(FEDCH_PER_FED);
+  const size_t header_lenght_in_bytes{128};
   //feHeader_ = FEDFEHeader::newFEHeader(headerType(), getPointerToDataAfterTrackerSpecialHeader());
-  payloadPointer_ = getPointerToDataAfterTrackerSpecialHeader(); // + feHeader_->lengthInBytes(); If default header type -> 0
+  payloadPointer_ = getPointerToDataAfterTrackerSpecialHeader() + header_lenght_in_bytes;
   payloadLength_ = getPointerToByteAfterEndOfPayload() - payloadPointer_;
 }
 
@@ -41,12 +42,15 @@ inline const uint8_t* FEDBuffer::getPointerToByteAfterEndOfPayload() const {
 }
 
 void FEDBuffer::findChannels() {
-  //set min length to 2 for ZSLite, 7 for ZS and 3 for raw
-  //uint16_t minLength{7};
   uint16_t offsetBeginningOfChannel = 0;
   for (uint16_t i = 0; i < FEDCH_PER_FED; i++) {
+    if (!(fePresent(i / FEDCH_PER_FEUNIT))) { //should also check for feEnabled but it seems always true
+      channels_.insert(channels_.end(), uint16_t(FEDCH_PER_FEUNIT), FEDChannel(payloadPointer_, 0, 0));
+      i += FEDCH_PER_FEUNIT - 1;
+      validChannels_ += FEDCH_PER_FEUNIT;
+      continue;
+    }
     channels_.emplace_back(payloadPointer_, offsetBeginningOfChannel);
-    //get length and check that whole channel fits into buffer
     uint16_t channelLength = channels_.back().length();
 
     validChannels_++;
@@ -62,3 +66,18 @@ void FEDBuffer::findChannels() {
     }
   }
 }
+
+inline uint16_t FEDBuffer::feUnitLength(const uint8_t internalFEUnitNum) const
+  {
+    return ( (feWord(internalFEUnitNum)[15]<<8) | (feWord(internalFEUnitNum)[14]) );
+  }
+
+inline bool FEDBuffer::fePresent(const uint8_t internalFEUnitNum) const
+  {
+    return (feUnitLength(internalFEUnitNum) != 0);
+  }
+
+inline const uint8_t* FEDBuffer::feWord(const uint8_t internalFEUnitNum) const
+  {
+    return header_+internalFEUnitNum*2*8;
+  }
