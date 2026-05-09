@@ -7,6 +7,7 @@
 #include "SiStripFEDChannel.h"
 #include <vector>
 #include <cstdint>
+#include <iostream>
 
 template <uint8_t num_words>
 constexpr uint16_t getADC_W(const uint8_t* data, uint_fast16_t offset, uint8_t bits_shift) {
@@ -29,18 +30,19 @@ std::vector<SiStripDigi> SiStripRawToDigi::operator()(const edm::Wrapper<FEDRawD
     buffer.findChannels();
     // LOOP ON FED CHANNELS
     for (uint8_t i_ch{0}; i_ch < FEDCH_PER_FED; ++i_ch) {
+        // TODO skip bad channels
         auto channel = buffer.channel(i_ch);
         if (channel.length() == 0) {
             continue;
         }
-        // const uint8_t pCode = buffer.packetCode(legacy_, iconn->fedCh()); only needed for bits_shift
+        // fed_key? capiamo
     
         const uint16_t stripStart{0};
         const uint8_t num_words{1};
         const uint8_t headerLength{7};
-        const uint8_t bits_shift{1};
+        const uint8_t bits_shift{0};
         const uint8_t* const data = channel.data();
-        uint_fast16_t offset = channel.offset() + headerLength;  // header is 2 (lite) or 7
+        uint_fast16_t offset = channel.offset() + headerLength;
         uint_fast8_t firstStrip{0}, nInCluster{0}, inCluster{0};
         const uint_fast16_t end = channel.offset() + channel.length();
         while (offset != end) {
@@ -60,6 +62,7 @@ std::vector<SiStripDigi> SiStripRawToDigi::operator()(const edm::Wrapper<FEDRawD
             ++inCluster;
         }
     }
+    // capire qui
     return digis;
 }
 
