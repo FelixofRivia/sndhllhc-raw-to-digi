@@ -12,7 +12,7 @@ FEDBuffer::FEDBuffer(const FEDRawData& fedBuffer) : originalBuffer_(fedBuffer.da
   
   channels_.reserve(FEDCH_PER_FED);
   const size_t header_lenght_in_bytes{128};
-  feHeader_ = std::unique_ptr<FEDFEHeader>(new FEDFullDebugHeader(getPointerToDataAfterTrackerSpecialHeader()));
+  feHeader_ = std::unique_ptr<FEDFullDebugHeader>(new FEDFullDebugHeader(getPointerToDataAfterTrackerSpecialHeader()));
   payloadPointer_ = getPointerToDataAfterTrackerSpecialHeader() + header_lenght_in_bytes;
   payloadLength_ = getPointerToByteAfterEndOfPayload() - payloadPointer_;
 

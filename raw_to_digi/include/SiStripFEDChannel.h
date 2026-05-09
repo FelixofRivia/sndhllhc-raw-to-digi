@@ -11,7 +11,7 @@ class FEDChannel {
     public:
         //gets length from first 2 bytes (assuming normal FED channel)
         constexpr FEDChannel(const uint8_t* const data, const uint32_t offset) : data_(data), offset_(offset), length_(data[(offset) ^ 7] + (data[(offset + 1) ^ 7] << 8)) {}
-        constexpr FEDChannel(const uint8_t* const data, const uint32_t offset, const uint16_t length) : data_(data), offset_(offset), length_(lenght) {}
+        constexpr FEDChannel(const uint8_t* const data, const uint32_t offset, const uint16_t length) : data_(data), offset_(offset), length_(length) {}
         constexpr uint16_t stripsInCh(uint8_t num_bits) const;
         constexpr uint16_t length() const { return length_; }
         constexpr const uint8_t* data() const { return data_; }

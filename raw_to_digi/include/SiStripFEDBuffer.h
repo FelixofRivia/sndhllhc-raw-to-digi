@@ -3,9 +3,12 @@
 
 #include "SiStripIOHeaders.h"
 #include "SiStripFEDChannel.h"
+#include "SiStripHardwareConstants.h"
+#include "FEDFullDebugHeader.h"
 
 #include <vector>
 #include <cstdint>
+#include <memory>
 
 //class representing standard (non-spy channel) FED buffers
 class FEDBuffer {
@@ -25,7 +28,7 @@ class FEDBuffer {
     const size_t bufferSize_;
     // FEDDAQHeader daqHeader_;
     // FEDDAQTrailer daqTrailer_;
-    std::unique_ptr<FEDFEHeader> feHeader_;
+    std::unique_ptr<FEDFullDebugHeader> feHeader_;
     const uint8_t* payloadPointer_;
     uint16_t payloadLength_;
     uint8_t validChannels_;
