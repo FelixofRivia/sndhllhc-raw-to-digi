@@ -1,6 +1,7 @@
 FROM almalinux:9
 
 ARG ROOT_BIN=root_v6.38.04.Linux-almalinux9.7-x86_64-gcc11.5.tar.gz
+ARG RAW_TO_DIGI_SRC=v0.1.0.tar.gz
 
 WORKDIR /opt
 
@@ -62,18 +63,31 @@ RUN dnf -y install --nobest --skip-broken \
         zeromq-devel \
         zlib-devel
 
-RUN curl -O https://root.cern/download/${ROOT_BIN} &&\
-    tar -xzvf ${ROOT_BIN} &&\
-    rm -f ${ROOT_BIN} &&\
-    echo /opt/root/lib >> /etc/ld.so.conf &&\
+RUN curl -O https://root.cern/download/${ROOT_BIN} && \
+    tar -xzvf ${ROOT_BIN} && \
+    rm -f ${ROOT_BIN} && \
+    echo /opt/root/lib >> /etc/ld.so.conf && \
     ldconfig
-
 
 ENV ROOTSYS=/opt/root
 ENV PATH=$ROOTSYS/bin:$PATH
 ENV PYTHONPATH=$ROOTSYS/lib:$PYTHONPATH
 
-CMD ["root", "-b"]
+WORKDIR /home
+
+RUN curl -OL https://github.com/FelixofRivia/sndhllhc-raw-to-digi/archive/refs/tags/${RAW_TO_DIGI_SRC} && \
+    mkdir sndhllhc-raw-to-digi && \
+    tar -xzvf ${RAW_TO_DIGI_SRC} -C sndhllhc-raw-to-digi --strip-components=1 && \
+    rm -f ${RAW_TO_DIGI_SRC} && \
+    cd sndhllhc-raw-to-digi && \
+    mkdir build && \
+    cd build && \
+    cmake .. && \
+    cmake --build . -j8 && \
+    ctest
+
+CMD ["/bin/bash"]
+
 
 
 
