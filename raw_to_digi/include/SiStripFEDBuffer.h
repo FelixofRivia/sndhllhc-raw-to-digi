@@ -17,6 +17,7 @@ class FEDBuffer {
 
     void findChannels();
     const FEDChannel& channel(const uint8_t internalFEDChannelNum) const { return channels_[internalFEDChannelNum];}
+    bool isZeroSuppressed() const;
 
   private:
     bool fePresent(uint8_t internalFEUnitNum) const;

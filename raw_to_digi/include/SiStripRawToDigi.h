@@ -27,6 +27,10 @@ std::vector<SiStripDigi> SiStripRawToDigi::operator()(const edm::Wrapper<FEDRawD
     size_t fed_index{116};
     FEDRawData data = sistrip_raw.obj.data_[fed_index];
     FEDBuffer buffer(data);
+    if (!buffer.isZeroSuppressed()) {
+        std::cout << "Only Zero Suppressed mode is supported, skipping this event.\n";
+        return digis;
+    }
     buffer.findChannels();
     // LOOP ON FED CHANNELS
     for (uint8_t i_ch{0}; i_ch < FEDCH_PER_FED; ++i_ch) {

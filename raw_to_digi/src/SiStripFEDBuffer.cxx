@@ -63,3 +63,13 @@ inline bool FEDBuffer::fePresent(uint8_t internalFEUnitNum) const { return fePre
 // inline bool FEDBufferBase::feEnabled(const uint8_t internalFEUnitNum) const {
 //   return specialHeader_.feEnabled(internalFEUnitNum);
 // }
+
+bool FEDBuffer::isZeroSuppressed() const {
+  const size_t BUFFERTYPE = 6;
+  uint8_t specialHeader[8];
+  memcpy(specialHeader, originalBuffer_ + 8, 8);
+  uint8_t nibble = specialHeader[BUFFERTYPE] & 0x0F;
+  if ((nibble == 0x1) || (nibble == 0xF)) return false;
+  const uint8_t mode = (nibble & 0xF);
+  return (mode == 0xA);
+}
