@@ -73,3 +73,10 @@ bool FEDBuffer::isZeroSuppressed() const {
   const uint8_t mode = (nibble & 0xF);
   return (mode == 0xA);
 }
+
+bool FEDBuffer::isValid() const {
+  // Extract if commissioning info are valid or not
+  const uint32_t daq1 = static_cast<uint32_t>(feHeader_->daqRegister());
+  const uint16_t temp = static_cast<uint16_t>((daq1 >> 8) & 0x3);
+  return (temp == uint16_t(1));
+}
