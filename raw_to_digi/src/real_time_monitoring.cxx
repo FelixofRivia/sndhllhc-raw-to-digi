@@ -6,6 +6,7 @@
 #include "ROOT/RDataFrame.hxx"
 #include "TCanvas.h"
 #include "TH1D.h"
+#include <TFile.h>
 
 #if USE_ROOT7_RHIST
 #include "ROOT/RHist.hxx"
@@ -18,11 +19,11 @@
 int main(int argc, char* argv[]){
     if (argc != 4) {
         std::cerr << "3 arguments expected but " << argc - 1 << " provided\n";
-        std::cerr << "Usage: raw_to_digi <input_path> <output_directory> <n_treads>\n";
+        std::cerr << "Usage: raw_to_digi <input_root_file> <output_root_file> <n_treads>\n";
         return 1;
     }
-    std::string input_path(argv[1]);
-    std::string output_directory(argv[2]);
+    std::string input_root_file(argv[1]);
+    std::string output_root_file(argv[2]);
 
     ROOT::EnableImplicitMT(std::stoi(argv[3]));
 
@@ -53,7 +54,7 @@ int main(int argc, char* argv[]){
         return ids;
     };
 
-    auto df = ROOT::RDataFrame("Events", input_path);
+    auto df = ROOT::RDataFrame("Events", input_root_file);
     auto df2 = df.Define("FedChannelDigis", SiStripRawToDigi(), {"FEDRawDataCollection_rawDataCollector__LHC."});
     auto df3 = df2.Define("ADC", extract_adc, {"FedChannelDigis"});
     auto df4 = df3.Define("strip", extract_strip, {"FedChannelDigis"});
@@ -74,15 +75,11 @@ int main(int argc, char* argv[]){
     auto histo_id = df5.Histo1D<std::vector<uint32_t>>({"SiStrip id", "SiStrip id", 512, 0, 512}, "id");
     #endif
 
-    TCanvas canvas_adc("canvas adc", "SiStrip ADC Histogram", 800, 600);
-    histo_adc->Draw();
-    canvas_adc.SaveAs((output_directory + std::string("/sistrip_adc.png")).c_str());
+    TFile output_file(output_root_file.c_str(), "RECREATE");
 
-    TCanvas canvas_strip("canvas strip", "SiStrip strip Histogram", 800, 600);
-    histo_strip->Draw();
-    canvas_strip.SaveAs((output_directory + std::string("/sistrip_strip.png")).c_str());
+    histo_adc->Write();
+    histo_strip->Write();
+    histo_id->Write();
 
-    TCanvas canvas_id("canvas id", "SiStrip id Histogram", 800, 600);
-    histo_id->Draw();
-    canvas_id.SaveAs((output_directory + std::string("/sistrip_id.png")).c_str());
+    output_file.Close();
 }
