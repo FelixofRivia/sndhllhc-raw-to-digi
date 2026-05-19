@@ -23,54 +23,56 @@ class SiStripRawToDigi {
 
 std::vector<SiStripDigi> SiStripRawToDigi::operator()(const edm::Wrapper<FEDRawDataCollection>& sistrip_raw) const {
     std::vector<SiStripDigi> digis;
+    std::vector<size_t> fed_ids = {116};
 
-    size_t fed_index{116};
-    FEDRawData data = sistrip_raw.obj.data_[fed_index];
-    FEDBuffer buffer(data);
-    if (!buffer.isValid()) {
-        std::cout << "Buffer is not valid, skipping this event.\n";
-        return digis;
-    }
-    if (!buffer.isZeroSuppressed()) {
-        std::cout << "Only Zero Suppressed mode is supported, skipping this event.\n";
-        return digis;
-    }
-    buffer.findChannels();
-    // LOOP ON FED CHANNELS
-    for (uint8_t i_ch{0}; i_ch < FEDCH_PER_FED; ++i_ch) {
-        // TODO skip bad channels
-        auto channel = buffer.channel(i_ch);
-        if (channel.length() == 0) {
-            continue;
+    for (const auto fed_id : fed_ids) {
+        FEDRawData data = sistrip_raw.obj.data_[fed_id];
+        FEDBuffer buffer(data);
+        if (!buffer.isValid()) {
+            std::cout << "Buffer is not valid, skipping this event.\n";
+            return digis;
         }
-        // fed_key? capiamo
-    
-        const uint16_t stripStart{0};
-        const uint8_t num_words{1};
-        const uint8_t headerLength{7};
-        const uint8_t bits_shift{0};
-        const uint8_t* const data = channel.data();
-        uint_fast16_t offset = channel.offset() + headerLength;
-        uint_fast8_t firstStrip{0}, nInCluster{0}, inCluster{0};
-        const uint_fast16_t end = channel.offset() + channel.length();
-        while (offset != end) {
-            if (inCluster == nInCluster) {
-                if (offset + 2 >= end) {
-                    // offset should already be at end then (empty cluster)
-                    break;
-                }
-                const uint_fast8_t newFirstStrip = data[(offset++) ^ 7];
-                firstStrip = newFirstStrip;
-                nInCluster = data[(offset++) ^ 7];
-                inCluster = 0;
+        if (!buffer.isZeroSuppressed()) {
+            std::cout << "Only Zero Suppressed mode is supported, skipping this event.\n";
+            return digis;
+        }
+        buffer.findChannels();
+        // LOOP ON FED CHANNELS
+        for (uint8_t i_ch{0}; i_ch < FEDCH_PER_FED; ++i_ch) {
+            // TODO skip bad channels
+            auto channel = buffer.channel(i_ch);
+            if (channel.length() == 0) {
+                continue;
             }
-            // Use i_ch as det_id, for the moment
-            digis.emplace_back(SiStripDigi(stripStart + firstStrip + inCluster, getADC_W<num_words>(data, offset, bits_shift), i_ch));
-            offset += num_words;
-            ++inCluster;
+            const uint32_t fed_key = ((fed_id & 0xFFFF) << 16) | (i_ch & 0xFFFF);
+        
+            const uint16_t stripStart{0};
+            const uint8_t num_words{1};
+            const uint8_t headerLength{7};
+            const uint8_t bits_shift{0};
+            const uint8_t* const data = channel.data();
+            uint_fast16_t offset = channel.offset() + headerLength;
+            uint_fast8_t firstStrip{0}, nInCluster{0}, inCluster{0};
+            const uint_fast16_t end = channel.offset() + channel.length();
+            while (offset != end) {
+                if (inCluster == nInCluster) {
+                    if (offset + 2 >= end) {
+                        // offset should already be at end then (empty cluster)
+                        break;
+                    }
+                    const uint_fast8_t newFirstStrip = data[(offset++) ^ 7];
+                    firstStrip = newFirstStrip;
+                    nInCluster = data[(offset++) ^ 7];
+                    inCluster = 0;
+                }
+
+                digis.emplace_back(SiStripDigi(stripStart + firstStrip + inCluster, getADC_W<num_words>(data, offset, bits_shift), fed_key));
+                offset += num_words;
+                ++inCluster;
+            }
         }
     }
-    // capire qui
+    // Do we need to order them?
     return digis;
 }
 
