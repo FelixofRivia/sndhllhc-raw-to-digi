@@ -14,14 +14,15 @@
 // .csv table: event number, strip, adc
 
 int main(int argc, char* argv[]){
-    if (argc != 3) {
+    if (argc != 4) {
         std::cerr << "2 arguments expected but " << argc - 1 << " provided\n";
-        std::cerr << "Usage: check_raw_read <input_root_path> <input_csv_path>\n";
+        std::cerr << "Usage: check_raw_read <input_root_path> <detector_info> <input_csv_path>\n";
         return 1;
     }
 
     std::string input_root_path(argv[1]);
-    std::string input_csv_path(argv[2]);
+    std::string detector_info_path(argv[2]);
+    std::string input_csv_path(argv[3]);
     std::ifstream input_csv_file(input_csv_path);
     if (!input_csv_file.is_open()) {
         std::cerr << "File not found: " << input_csv_path << "\n";
@@ -35,13 +36,13 @@ int main(int argc, char* argv[]){
     }
 
     auto df = ROOT::RDataFrame("Events", input_root_path);
-    auto df2 = df.Define("FedChannelDigis", SiStripRawToDigi(), {"FEDRawDataCollection_rawDataCollector__LHC."});
+    auto df2 = df.Define("FedChannelDigis", SiStripRawToDigi(detector_info_path), {"FEDRawDataCollection_rawDataCollector__LHC."});
 
     size_t csv_row_index{0};
     size_t event_number{0};
     auto check_line = [&csv_row_index, &event_number, &csv_rows](const std::vector<SiStripDigi>& digis){ 
         for (const auto& digi : digis) {
-            std::string csv_row_to_compare = std::to_string(event_number) + std::string(",") + std::to_string(digi.fed_key()) + std::string(",") + std::to_string(digi.strip()) + std::string(",") + std::to_string(digi.adc());
+            std::string csv_row_to_compare = std::to_string(event_number) + std::string(",") + std::to_string(digi.GetFedKey()) + std::string(",") + std::to_string(digi.GetStrip()) + std::string(",") + std::to_string(digi.GetSignal());
             if (csv_row_to_compare != csv_rows[csv_row_index]) {
                 std::cerr << "Row number " << csv_row_index + 1 << " does not match:\nExpected:\t" << csv_rows[csv_row_index] << "\nProduced:\t" << csv_row_to_compare << "\n";
                 throw std::runtime_error("CSV row mismatch");

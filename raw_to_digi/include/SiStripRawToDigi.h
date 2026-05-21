@@ -5,7 +5,9 @@
 #include "SiStripHardwareConstants.h"
 #include "SiStripFEDBuffer.h"
 #include "SiStripFEDChannel.h"
+#include "SiStripDetInfo.h"
 #include <vector>
+#include <unordered_set>
 #include <cstdint>
 #include <iostream>
 
@@ -17,13 +19,18 @@ constexpr uint16_t getADC_W(const uint8_t* data, uint_fast16_t offset, uint8_t b
 
 class SiStripRawToDigi {
     public:
-        SiStripRawToDigi() = default;
+        SiStripRawToDigi(const std::string& detinfo_file_name) : detector_info_(GetDetectorInfo(detinfo_file_name)) { ; }
         std::vector<SiStripDigi> operator()(const edm::Wrapper<FEDRawDataCollection>& sistrip_raw) const;
+    private:
+        std::vector<DetectorInfo> detector_info_;
 };
 
 std::vector<SiStripDigi> SiStripRawToDigi::operator()(const edm::Wrapper<FEDRawDataCollection>& sistrip_raw) const {
     std::vector<SiStripDigi> digis;
-    std::vector<size_t> fed_ids = {116};
+    //std::vector<size_t> fed_ids = {116};
+    // Create set of unique def_ids
+    std::unordered_set<size_t> fed_ids;
+    std::for_each(detector_info_.begin(), detector_info_.end(), [&] (const DetectorInfo& d){ fed_ids.insert(static_cast<size_t>(d.fedid)); });
 
     for (const auto fed_id : fed_ids) {
         FEDRawData data = sistrip_raw.obj.data_[fed_id];
@@ -36,6 +43,18 @@ std::vector<SiStripDigi> SiStripRawToDigi::operator()(const edm::Wrapper<FEDRawD
             std::cout << "Only Zero Suppressed mode is supported, skipping this event.\n";
             return digis;
         }
+
+        // Map fed channel to detector info
+        std::unordered_map<int, const DetectorInfo*> index;
+        for (const auto& d : detector_info_) {
+            if (static_cast<size_t>(d.fedid) == fed_id) {
+                auto [it, inserted] = index.emplace(d.fedchannel, &d);
+                if (!inserted) {
+                    throw std::runtime_error("Duplicate fedchannel in DetectorInfo list");
+                }
+            }
+        }
+
         buffer.findChannels();
         // LOOP ON FED CHANNELS
         for (uint8_t i_ch{0}; i_ch < FEDCH_PER_FED; ++i_ch) {
@@ -66,7 +85,10 @@ std::vector<SiStripDigi> SiStripRawToDigi::operator()(const edm::Wrapper<FEDRawD
                     inCluster = 0;
                 }
 
-                digis.emplace_back(SiStripDigi(stripStart + firstStrip + inCluster, getADC_W<num_words>(data, offset, bits_shift), fed_key));
+                auto it_detinfo = index.find(i_ch);
+                if (it_detinfo == index.end()) throw std::runtime_error("fedchannel not found");
+
+                digis.emplace_back(SiStripDigi(stripStart + firstStrip + inCluster, getADC_W<num_words>(data, offset, bits_shift), fed_key, 0, *(it_detinfo->second)));
                 offset += num_words;
                 ++inCluster;
             }
