@@ -114,11 +114,13 @@ int main(int argc, char* argv[]){
     auto histo_adc = df9.Histo1D<std::vector<uint16_t>>({"SiStrip adc", "SiStrip adc", 512, 0, 512}, "ADC");
     auto histo_strip = df9.Histo1D<std::vector<uint16_t>>({"SiStrip strip", "SiStrip strip", 756, 0, 756}, "strip");
     auto histo_fed_key = df9.Histo1D<std::vector<uint32_t>>({"SiStrip fed_key", "SiStrip fed_key", 100, 7602100, 7602200}, "fed_key");
+    #endif
+
     auto histo_layer = df9.Histo1D<std::vector<int>>({"SiStrip layer", "SiStrip layer", 20, 0, 20}, "layer");
     auto histo_row = df9.Histo1D<std::vector<int>>({"SiStrip row", "SiStrip row", 4, 0, 4}, "row");
     auto histo_column = df9.Histo1D<std::vector<int>>({"SiStrip column", "SiStrip column", 2, 0, 2}, "column");
     auto histo_detector_id = df9.Histo1D<std::vector<uint32_t>>({"SiStrip detector_id", "SiStrip detector_id", 10000, 0, 180000}, "detector_id");
-    #endif
+    auto histo_row_vs_column = df9.Histo2D<std::vector<int>, std::vector<int>>({"SiStrip row vs column", "SiStrip row vs column;column;row", 2, 0, 2, 4, 0, 4}, "column", "row");
 
     TFile output_file(output_root_file.c_str(), "RECREATE");
 
@@ -129,6 +131,7 @@ int main(int argc, char* argv[]){
     histo_row->Write();
     histo_column->Write();
     histo_detector_id->Write();
+    histo_row_vs_column->Write();
 
     output_file.Close();
 }
