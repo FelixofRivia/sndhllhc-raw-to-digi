@@ -8,8 +8,8 @@
 #include "SiStripRawToDigi.h"
 
 int main(int argc, char* argv[]){
-    if (argc != 3) {
-        std::cerr << "2 arguments expected but " << argc - 1 << " provided\n";
+    if (argc != 4) {
+        std::cerr << "3 arguments expected but " << argc - 1 << " provided\n";
         std::cerr << "Usage: raw_to_digi <input_path> <detector_info> <output_path>\n";
         return 1;
     }
