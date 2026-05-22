@@ -42,7 +42,7 @@ int main(int argc, char* argv[]){
     size_t event_number{0};
     auto check_line = [&csv_row_index, &event_number, &csv_rows](const std::vector<SiStripDigi>& digis){ 
         for (const auto& digi : digis) {
-            std::string csv_row_to_compare = std::to_string(event_number) + std::string(",") + std::to_string(digi.GetFedKey()) + std::string(",") + std::to_string(digi.GetStrip()) + std::string(",") + std::to_string(digi.GetSignal());
+            std::string csv_row_to_compare = std::to_string(event_number) + std::string(",") + std::to_string(digi.GetFedKey()) + std::string(",") + std::to_string(digi.GetStrip() % 256) + std::string(",") + std::to_string(digi.GetSignal());
             if (csv_row_to_compare != csv_rows[csv_row_index]) {
                 std::cerr << "Row number " << csv_row_index + 1 << " does not match:\nExpected:\t" << csv_rows[csv_row_index] << "\nProduced:\t" << csv_row_to_compare << "\n";
                 throw std::runtime_error("CSV row mismatch");

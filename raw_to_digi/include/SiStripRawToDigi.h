@@ -27,7 +27,6 @@ class SiStripRawToDigi {
 
 std::vector<SiStripDigi> SiStripRawToDigi::operator()(const edm::Wrapper<FEDRawDataCollection>& sistrip_raw) const {
     std::vector<SiStripDigi> digis;
-    //std::vector<size_t> fed_ids = {116};
     // Create set of unique def_ids
     std::unordered_set<size_t> fed_ids;
     std::for_each(detector_info_.begin(), detector_info_.end(), [&] (const DetectorInfo& d){ fed_ids.insert(static_cast<size_t>(d.fedid)); });
@@ -87,14 +86,19 @@ std::vector<SiStripDigi> SiStripRawToDigi::operator()(const edm::Wrapper<FEDRawD
 
                 auto it_detinfo = index.find(i_ch);
                 if (it_detinfo == index.end()) throw std::runtime_error("fedchannel not found");
+                auto& detector_info = *(it_detinfo->second);
+                
+                // The strip id in a module ranges 0 - 756, depending on the APV
+                const uint16_t module_strip_id = 256 * GetApvPair(detector_info) + (stripStart + firstStrip + inCluster);
 
-                digis.emplace_back(SiStripDigi(stripStart + firstStrip + inCluster, getADC_W<num_words>(data, offset, bits_shift), fed_key, 0, *(it_detinfo->second)));
+                // For the moment set time to 0
+                digis.emplace_back(SiStripDigi(module_strip_id, getADC_W<num_words>(data, offset, bits_shift), fed_key, 0, detector_info));
                 offset += num_words;
                 ++inCluster;
             }
         }
     }
-    // Do we need to order them?
+    // Do we need to order them? (probably not)
     return digis;
 }
 

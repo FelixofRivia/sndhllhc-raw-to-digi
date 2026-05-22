@@ -112,7 +112,7 @@ int main(int argc, char* argv[]){
     // If RHist is not available
     #else
     auto histo_adc = df9.Histo1D<std::vector<uint16_t>>({"SiStrip adc", "SiStrip adc", 512, 0, 512}, "ADC");
-    auto histo_strip = df9.Histo1D<std::vector<uint16_t>>({"SiStrip strip", "SiStrip strip", 512, 0, 512}, "strip");
+    auto histo_strip = df9.Histo1D<std::vector<uint16_t>>({"SiStrip strip", "SiStrip strip", 756, 0, 756}, "strip");
     auto histo_fed_key = df9.Histo1D<std::vector<uint32_t>>({"SiStrip fed_key", "SiStrip fed_key", 100, 7602100, 7602200}, "fed_key");
     auto histo_layer = df9.Histo1D<std::vector<int>>({"SiStrip layer", "SiStrip layer", 20, 0, 20}, "layer");
     auto histo_row = df9.Histo1D<std::vector<int>>({"SiStrip row", "SiStrip row", 4, 0, 4}, "row");

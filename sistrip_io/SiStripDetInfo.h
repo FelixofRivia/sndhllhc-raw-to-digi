@@ -13,6 +13,7 @@ struct DetectorInfo {
     int fedid;
     int ccuaddress;
     int i2channel;
+    int i2caddress;
     int fedchannel;
     int napvpairs;
     int layer;
@@ -21,14 +22,29 @@ struct DetectorInfo {
 };
 
 inline bool CheckDetectorInfo(const DetectorInfo& detinfo) {
-    if (detinfo.napvpairs > 3) {
-        std::cerr << "napvpairs > 3 (" << detinfo.napvpairs << ")\n";
-        return false;
+    // If there are only 2 apv pairs the strips per module are 512 and wider
+    if (detinfo.napvpairs == 2) {
+        if ((detinfo.i2caddress != 32) && (detinfo.i2caddress != 36)) {
+            std::cerr << "(detinfo.i2caddress != 32) && (detinfo.i2caddress != 36) (" << detinfo.i2caddress << ")\n";
+            return false;
+        }
     }
+    else if (detinfo.napvpairs == 3) {
+        if ((detinfo.i2caddress != 32) && (detinfo.i2caddress != 34) && (detinfo.i2caddress != 36)) {
+            std::cerr << "(detinfo.i2caddress != 32) && (detinfo.i2caddress != 34) && (detinfo.i2caddress != 36) (" << detinfo.i2caddress << ")\n";
+            return false;
+        }
+    }
+    else {
+        std::cerr << "(detinfo.napvpairs != 2) && (detinfo.napvpairs != 3) (" << detinfo.napvpairs << ")\n";
+        return false;     
+    }
+
     if (detinfo.row > 3) {
         std::cerr << "detinfo.row > 3 (" << detinfo.row << ")\n";
         return false;
     }
+
     if (detinfo.column > 2) {
         std::cerr << "detinfo.column > 2 (" << detinfo.column << ")\n";
         return false;
@@ -73,6 +89,9 @@ inline std::vector<DetectorInfo> GetDetectorInfo(const std::string& file_name) {
             data.i2channel = std::stoi(value);
 
             std::getline(ss, value, ',');
+            data.i2caddress = std::stoi(value);
+
+            std::getline(ss, value, ',');
             data.fedchannel = std::stoi(value);
 
             std::getline(ss, value, ',');
@@ -101,6 +120,31 @@ inline std::vector<DetectorInfo> GetDetectorInfo(const std::string& file_name) {
     }
 
     return records;
+}
+
+inline int GetApvPair(const DetectorInfo& detinfo) {
+    // Already checked by CheckDetectorInfo
+    if (detinfo.napvpairs == 2) {
+        if (detinfo.i2caddress == 32) return 0;
+        else if (detinfo.i2caddress == 36) return 1;
+        else {
+            std::cerr << "Invalid napvpairs: " << detinfo.napvpairs << "\ti2caddress: " << detinfo.i2caddress << "\n";
+            return -1;
+        }
+    }
+    else if (detinfo.napvpairs == 3) {
+        if (detinfo.i2caddress == 32) return 0;
+        else if (detinfo.i2caddress == 34) return 1;
+        else if (detinfo.i2caddress == 36) return 2;
+        else {
+            std::cerr << "Invalid napvpairs: " << detinfo.napvpairs << "\ti2caddress: " << detinfo.i2caddress << "\n";
+            return -1;
+        }
+    }
+    else {
+        std::cerr << "Invalid napvpairs: " << detinfo.napvpairs << "\ti2caddress: " << detinfo.i2caddress << "\n";
+        return -1;
+    }
 }
 
 #endif
