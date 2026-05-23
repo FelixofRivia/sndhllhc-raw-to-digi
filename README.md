@@ -14,13 +14,13 @@ Input raw data is produced by CMS DAQ. Currently only Zero Suppressed DAQ mode (
 
 ## Dependencies
 
-- ROOT 6.36 or later
+- [ROOT](https://root.cern.ch/) 6.36 or later
 
 ## Project Structure
 - `sistrip_io/` – Input/output classes for ROOT dictionary generation
 - `raw_info/` – Tools to inspect and dump raw data information
 - `raw_to_digi/` – Raw-to-digi conversion and real-time monitoring code
-- `tests/` – CTest-based validation against reference CMSSW datasets
+- `tests/` – CTest-based validation against reference [CMSSW](https://github.com/cms-sw/cmssw) datasets
 - `docs/` – Additional documentation
 - `Dockerfile` – Containerized build environment
 
