@@ -1,7 +1,7 @@
 FROM almalinux:9
 
 ARG ROOT_BIN=root_v6.38.04.Linux-almalinux9.7-x86_64-gcc11.5.tar.gz
-ARG RAW_TO_DIGI_SRC=v0.3.0.tar.gz
+ARG RAW_TO_DIGI_SRC=v0.4.0.tar.gz
 
 WORKDIR /opt
 
