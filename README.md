@@ -5,6 +5,7 @@ Input raw data is produced by CMS DAQ. Currently only Zero Suppressed DAQ mode (
 <p align="center">
   <img src="docs/images/SiStrip_pipeline.png" alt="Digitization pipeline" width="700"/>
 </p>
+
 ## Features
 
 - SiStrip raw-to-digi conversion
