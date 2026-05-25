@@ -26,8 +26,8 @@ public:
 
 public:
 // Data Members.
-   bool        present;     //
-   FEDRawDataCollection obj;         //
+   bool present;
+   FEDRawDataCollection obj;
 
    Wrapper();
    Wrapper(Wrapper && ) = default;

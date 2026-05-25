@@ -20,7 +20,7 @@ public:
 
 public:
 // Data Members.
-   std::vector<unsigned char> data_;       //
+   std::vector<unsigned char> data_;
 
    FEDRawData();
    FEDRawData(FEDRawData && ) = default;

@@ -35,7 +35,6 @@ int main(int argc, char* argv[]){
         std::cerr << "Supported formats: ttree, rntuple\n";
         return 1;
     }
-    opts.fOutputFormat = ROOT::RDF::ESnapshotOutputFormat::kRNTuple;
 
     auto df = ROOT::RDataFrame("Events", input_path);
     auto df2 = df.Define("FedChannelDigis", SiStripRawToDigi(detector_info_path), {"FEDRawDataCollection_rawDataCollector__LHC."});

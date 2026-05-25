@@ -1,5 +1,5 @@
-#ifndef SNDHLLHC_SISTRIPRAWTODIGI_H
-#define SNDHLLHC_SISTRIPRAWTODIGI_H
+#ifndef SNDHLLHC_SISTRIP_RAWTODIGI_H
+#define SNDHLLHC_SISTRIP_RAWTODIGI_H
 
 #include "SiStripIOHeaders.h"
 #include "SiStripHardwareConstants.h"
@@ -32,15 +32,15 @@ std::vector<SiStripDigi> SiStripRawToDigi::operator()(const edm::Wrapper<FEDRawD
     std::for_each(detector_info_.begin(), detector_info_.end(), [&] (const DetectorInfo& d){ fed_ids.insert(static_cast<size_t>(d.fedid)); });
 
     for (const auto fed_id : fed_ids) {
-        FEDRawData data = sistrip_raw.obj.data_[fed_id];
-        FEDBuffer buffer(data);
+        const FEDRawData& raw_data = sistrip_raw.obj.data_[fed_id];
+        FEDBuffer buffer(raw_data);
         if (!buffer.isValid()) {
-            std::cout << "Buffer is not valid, skipping this event.\n";
-            return digis;
+            std::cout << "Buffer is not valid, skipping FED.\n";
+            continue;
         }
         if (!buffer.isZeroSuppressed()) {
-            std::cout << "Only Zero Suppressed mode is supported, skipping this event.\n";
-            return digis;
+            std::cout << "Only Zero Suppressed mode is supported, skipping FED.\n";
+            continue;
         }
 
         // Map fed channel to detector info
@@ -55,19 +55,19 @@ std::vector<SiStripDigi> SiStripRawToDigi::operator()(const edm::Wrapper<FEDRawD
         }
 
         buffer.findChannels();
-        // LOOP ON FED CHANNELS
+        // Loop on FED channels
         for (uint8_t i_ch{0}; i_ch < FEDCH_PER_FED; ++i_ch) {
             // TODO skip bad channels
-            auto channel = buffer.channel(i_ch);
+            const auto channel = buffer.channel(i_ch);
             if (channel.length() == 0) {
                 continue;
             }
             const uint32_t fed_key = ((fed_id & 0xFFFF) << 16) | (i_ch & 0xFFFF);
         
-            const uint16_t stripStart{0};
-            const uint8_t num_words{1};
-            const uint8_t headerLength{7};
-            const uint8_t bits_shift{0};
+            constexpr uint16_t stripStart{0};
+            constexpr uint8_t num_words{1};
+            constexpr uint8_t headerLength{7};
+            constexpr uint8_t bits_shift{0};
             const uint8_t* const data = channel.data();
             uint_fast16_t offset = channel.offset() + headerLength;
             uint_fast8_t firstStrip{0}, nInCluster{0}, inCluster{0};
@@ -89,7 +89,7 @@ std::vector<SiStripDigi> SiStripRawToDigi::operator()(const edm::Wrapper<FEDRawD
                 auto& detector_info = *(it_detinfo->second);
                 
                 // The strip id in a module ranges 0 - 756, depending on the APV
-                const uint16_t module_strip_id = 256 * GetApvPair(detector_info) + (stripStart + firstStrip + inCluster);
+                const uint16_t module_strip_id = SISTRIPS_PER_APV_PAIR * GetApvPair(detector_info) + (stripStart + firstStrip + inCluster);
 
                 // For the moment set time to 0
                 digis.emplace_back(SiStripDigi(module_strip_id, getADC_W<num_words>(data, offset, bits_shift), fed_key, 0, detector_info));

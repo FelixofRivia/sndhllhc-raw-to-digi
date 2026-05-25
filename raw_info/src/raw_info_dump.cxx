@@ -16,11 +16,14 @@ int main(int argc, char* argv[]){
     std::string input_path(argv[1]);
     std::unique_ptr<TFile> input_raw_file( TFile::Open(input_path.c_str(), "READ") );
 
+    if (!input_raw_file || input_raw_file->IsZombie()) {
+        std::cerr << "Cannot open file" << input_path << "\n";
+        return 1;
+    }
+
     auto input_raw_tree = input_raw_file->Get<TTree>("Events");
     input_raw_tree->SetBranchStatus("*", false);
     input_raw_tree->SetBranchStatus("FEDRawDataCollection_rawDataCollector__LHC.*", true);
-
-    //input_raw_tree->Scan("FEDRawDataCollection_rawDataCollector__LHC.obj.data_.data_");
 
     edm::Wrapper<FEDRawDataCollection> *raw_data{nullptr};
     input_raw_tree->SetBranchAddress("FEDRawDataCollection_rawDataCollector__LHC.", &raw_data);
@@ -33,7 +36,7 @@ int main(int argc, char* argv[]){
             continue;
         }
         std::cout << "raw_data->present: " << raw_data->present << "\n";
-        std::vector<FEDRawData> feds = raw_data->obj.data_;
+        const auto& feds = raw_data->obj.data_;
         std::cout << "feds.size(): " << feds.size() << "\n";
         for (size_t fed_index{0}; fed_index < feds.size(); ++fed_index) {
             if (feds[fed_index].data_.size() > 0) {

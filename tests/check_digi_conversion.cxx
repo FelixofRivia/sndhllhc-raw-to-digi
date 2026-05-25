@@ -53,7 +53,6 @@ int main(int argc, char* argv[]){
     };
     df2.Foreach(check_line, {"FedChannelDigis"});
 
-    
     input_csv_file.close();
     if (csv_row_index != csv_rows.size()) {
         std::cerr << "Number of rows does not match:\nExpected:\t" << csv_rows.size() << "\tProduced:\t" << csv_row_index << "\n";

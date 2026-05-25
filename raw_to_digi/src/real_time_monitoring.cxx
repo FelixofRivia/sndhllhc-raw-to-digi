@@ -65,7 +65,7 @@ int main(int argc, char* argv[]){
     // #endif
 
     // Retrieve detinfo values to generate histograms dynamically
-    std::vector<DetectorInfo> detinfo = GetDetectorInfo(detector_info_path);
+    const std::vector<DetectorInfo> detinfo = GetDetectorInfo(detector_info_path);
     const int max_row = std::max_element(detinfo.begin(), detinfo.end(), [](const DetectorInfo& x, const DetectorInfo& y) {return x.row < y.row;})->row;
     const int max_column = std::max_element(detinfo.begin(), detinfo.end(), [](const DetectorInfo& x, const DetectorInfo& y) {return x.column < y.column;})->column;
 

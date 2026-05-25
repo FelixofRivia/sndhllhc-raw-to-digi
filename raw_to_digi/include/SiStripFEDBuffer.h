@@ -1,5 +1,5 @@
-#ifndef EventFilter_SiStripRawToDigi_SiStripFEDBuffer_H
-#define EventFilter_SiStripRawToDigi_SiStripFEDBuffer_H
+#ifndef SNDHLLHC_SISTRIP_FEDBUFFER_H
+#define SNDHLLHC_SISTRIP_FEDBUFFER_H
 
 #include "SiStripIOHeaders.h"
 #include "SiStripFEDChannel.h"
@@ -10,11 +10,10 @@
 #include <cstdint>
 #include <memory>
 
-//class representing standard (non-spy channel) FED buffers
+// Class representing standard (non-spy channel) FED buffers
 class FEDBuffer {
   public:
     explicit FEDBuffer(const FEDRawData& fedBuffer);
-
     void findChannels();
     const FEDChannel& channel(const uint8_t internalFEDChannelNum) const { return channels_[internalFEDChannelNum];}
     bool isValid() const;
@@ -24,18 +23,16 @@ class FEDBuffer {
     bool fePresent(uint8_t internalFEUnitNum) const;
     const uint8_t* getPointerToDataAfterTrackerSpecialHeader() const;
     const uint8_t* getPointerToByteAfterEndOfPayload() const;
+
     std::vector<FEDChannel> channels_;
+    std::unique_ptr<FEDFullDebugHeader> feHeader_;
     const uint8_t* originalBuffer_;
     const uint8_t* orderedBuffer_;
-    const size_t bufferSize_;
-    // FEDDAQHeader daqHeader_;
-    // FEDDAQTrailer daqTrailer_;
-    std::unique_ptr<FEDFullDebugHeader> feHeader_;
     const uint8_t* payloadPointer_;
+    size_t bufferSize_;
     uint16_t payloadLength_;
     uint8_t validChannels_;
     bool fePresent_[FEUNITS_PER_FED];
 };
 
-  
-#endif  //ndef EventFilter_SiStripRawToDigi_SiStripFEDBuffer_H
+#endif

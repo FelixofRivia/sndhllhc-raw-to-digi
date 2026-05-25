@@ -22,7 +22,7 @@ public:
 
 public:
 // Data Members.
-   std::vector<FEDRawData> data_;       //the raw data
+   std::vector<FEDRawData> data_;       // the raw data
 
    FEDRawDataCollection();
    FEDRawDataCollection(FEDRawDataCollection && ) = default;

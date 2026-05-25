@@ -1,5 +1,5 @@
-#ifndef SNDHLLHC_SISTRIP_DET_INFO
-#define SNDHLLHC_SISTRIP_DET_INFO
+#ifndef SNDHLLHC_SISTRIP_DETINFO_H
+#define SNDHLLHC_SISTRIP_DETINFO_H
 
 #include <fstream>
 #include <sstream>
