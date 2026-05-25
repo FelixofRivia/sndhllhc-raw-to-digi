@@ -25,7 +25,7 @@ int main(int argc, char* argv[]){
     edm::Wrapper<FEDRawDataCollection> *raw_data{nullptr};
     input_raw_tree->SetBranchAddress("FEDRawDataCollection_rawDataCollector__LHC.", &raw_data);
     
-    for(int i{1}; i < input_raw_tree->GetEntries() && i<2; ++i){
+    for(int i{0}; i < input_raw_tree->GetEntries(); ++i){
         input_raw_tree->GetEntry(i);
         std::cout << "Entry: " << i << "\n";
         if (!raw_data){
