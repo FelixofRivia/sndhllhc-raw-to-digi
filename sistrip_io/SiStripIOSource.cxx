@@ -17,8 +17,8 @@ edm::Wrapper<FEDRawDataCollection> &edm::Wrapper<FEDRawDataCollection>::operator
 }
 edm::Wrapper<FEDRawDataCollection>::Wrapper(const Wrapper & rhs)
    : edm::WrapperBase(const_cast<Wrapper &>( rhs ))
-   , present(const_cast<Wrapper &>( rhs ).present)
    , obj(const_cast<Wrapper &>( rhs ).obj)
+   , present(const_cast<Wrapper &>( rhs ).present)
 {
    // This is NOT a copy constructor. This is actually a move constructor (for stl container's sake).
    // Use at your own risk!
