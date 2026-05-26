@@ -2,7 +2,7 @@ from pathlib import Path
 
 from libs.processing_status import create_status_table
 from libs.run_conversion import run_conversion
-from libs.run_qdm import run_dqm
+from libs.run_dqm import run_dqm
 
 def main():
     directories = {
