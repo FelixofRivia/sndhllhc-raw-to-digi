@@ -17,8 +17,8 @@ def create_status_table(directories):
         run_number = run_name.replace("run", "")
 
         # Count files
-        raw_files = list(run_dir.glob("*.raw"))
-        jsn_files = list(run_dir.glob("*.jsn"))
+        raw_files = list(run_dir.glob("*index*.raw"))
+        jsn_files = list(run_dir.glob("*index*.jsn"))
 
         n_raw = len(raw_files)
         n_jsn = len(jsn_files)
