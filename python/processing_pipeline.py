@@ -6,16 +6,16 @@ def main():
     directories = {
         "raw" : Path("/eos/experiment/sndlhc/Run4/testbeam2026/monitoring_test"),
         "converted" : Path("/eos/experiment/sndlhc/Run4/testbeam2026/converted_data"),
-        "histos" : Path("/eos/experiment/sndlhc/www/testbeam2026")
+        "histos" : Path("/eos/experiment/sndlhc/www/testbeam2026"),
+        "logs" : Path("")
     }
 
-    OUTPUT_CSV = "run_summary.csv"
-
     df = create_status_table(directories)
-    df.to_csv(OUTPUT_CSV, index=False)
+    output_csv_path = directories["logs"] / "conversion_pipeline_summary.csv"
+    df.to_csv(output_csv_path, index=False)
 
     print(df)
-    print(f"\nSaved summary to: {OUTPUT_CSV}")
+    print(f"\nSaved summary to: {output_csv_path}")
 
 if __name__ == "__main__":
     main()

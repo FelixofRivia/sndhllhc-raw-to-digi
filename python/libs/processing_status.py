@@ -16,7 +16,7 @@ def create_status_table(directories):
         run_name = run_dir.name
         run_number = run_name.replace("run", "")
 
-        # Count files in A
+        # Count files
         raw_files = list(run_dir.glob("*.raw"))
         jsn_files = list(run_dir.glob("*.jsn"))
 
@@ -53,5 +53,6 @@ def create_status_table(directories):
         })
     
     df = pd.DataFrame(rows)
-    df = df.sort_values("run")
+    if not df.empty:
+        df = df.sort_values("run")
     return df
