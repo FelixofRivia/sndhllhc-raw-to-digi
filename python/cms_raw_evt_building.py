@@ -1,6 +1,7 @@
 import FWCore.ParameterSet.Config as cms
 import FWCore.ParameterSet.VarParsing as VarParsing
 import glob
+import os
 from pathlib import Path
   
 options = VarParsing.VarParsing()  
@@ -9,14 +10,14 @@ options.register('rawDirectory',
     '',  
     VarParsing.VarParsing.multiplicity.singleton,  
     VarParsing.VarParsing.varType.string,  
-    "Directory containing raw files"  
+    "Directory containing raw directories"  
 )  
   
-options.register('outputPath',  
+options.register('convertedDirectory',  
     '',  
     VarParsing.VarParsing.multiplicity.singleton,  
     VarParsing.VarParsing.varType.string,  
-    "Path for output converted root file"  
+    "Directory containing converted directories"  
 )  
   
 options.register('runNumber',  
@@ -28,8 +29,8 @@ options.register('runNumber',
   
 options.parseArguments()  
   
-if not options.rawDirectory or not options.outputPath or not options.runNumber:  
-    raise ValueError("rawDir, outputDir, and runNumber must all be provided")
+if not options.rawDirectory or not options.convertedDirectory or not options.runNumber:  
+    raise ValueError("rawDirectory, convertedDirectory, and runNumber must all be provided")
 
 
 process = cms.Process("Convert")
@@ -59,8 +60,11 @@ process.source = cms.Source("FedRawDataInputSource",
 
 maxEvents = cms.PSet(input = cms.untracked.int32(-1))
 
+output_dir = Path(options.convertedDirectory) / f"run{options.runNumber:06d}"  
+os.makedirs(output_dir, exist_ok=True)  
+
 process.out = cms.OutputModule("PoolOutputModule",
-    fileName       = cms.untracked.string(options.outputPath),
+    fileName       = cms.untracked.string(output_dir / f"run{options.runNumber:06d}_converted.root"),
     outputCommands = cms.untracked.vstring("drop *", "keep FEDRawDataCollection_*_*_*"),
 )
 

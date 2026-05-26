@@ -5,6 +5,7 @@ def file_modified_time(path):
     if path.exists():
         return datetime.fromtimestamp(path.stat().st_mtime)
     return None
+    
 
 def create_status_table(directories):
     rows = []
