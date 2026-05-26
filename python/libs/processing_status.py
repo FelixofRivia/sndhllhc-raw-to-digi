@@ -29,28 +29,28 @@ def create_status_table(directories):
             directories["converted"] / run_name / f"{run_name}_converted.root"
         )
 
-        qdm_file = directories["histos"] / f"{run_name}_qdm.root"
+        dqm_file = directories["histos"] / f"{run_name}_dqm.root"
 
         # Existence checks
         converted_exists = converted_file.exists()
-        qdm_exists = qdm_file.exists()
+        dqm_exists = dqm_file.exists()
 
         # Timestamp comparison
         converted_mtime = file_modified_time(converted_file)
-        qdm_mtime = file_modified_time(qdm_file)
+        dqm_mtime = file_modified_time(dqm_file)
 
-        qdm_up_to_date = False
+        dqm_up_to_date = False
 
-        if converted_exists and qdm_exists:
-            qdm_up_to_date = qdm_mtime >= converted_mtime
+        if converted_exists and dqm_exists:
+            dqm_up_to_date = dqm_mtime >= converted_mtime
 
         rows.append({
             "run": run_number,
             "n_raw": n_raw,
             "n_jsn": n_jsn,
             "converted_modified_time": converted_mtime,
-            "qdm_modified_time": qdm_mtime,
-            "qdm_up_to_date": qdm_up_to_date,
+            "dqm_modified_time": dqm_mtime,
+            "dqm_up_to_date": dqm_up_to_date,
         })
     
     df = pd.DataFrame(rows)
