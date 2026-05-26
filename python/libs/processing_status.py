@@ -9,7 +9,7 @@ def file_modified_time(path):
 
 def create_status_table(directories):
     rows = []
-    for run_dir in sorted(directories["raw"].glob("run[0-9][0-9][0-9][0-9][0-9][0-9]")):
+    for run_dir in sorted(directories["raw"].glob("run*")):
 
         if not run_dir.is_dir():
             continue

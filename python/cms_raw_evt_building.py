@@ -64,7 +64,7 @@ output_dir = Path(options.convertedDirectory) / f"run{options.runNumber:06d}"
 os.makedirs(output_dir, exist_ok=True)  
 
 process.out = cms.OutputModule("PoolOutputModule",
-    fileName       = cms.untracked.string(output_dir / f"run{options.runNumber:06d}_converted.root"),
+    fileName       = cms.untracked.string(str(output_dir / f"run{options.runNumber:06d}_converted.root")),
     outputCommands = cms.untracked.vstring("drop *", "keep FEDRawDataCollection_*_*_*"),
 )
 
