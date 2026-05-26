@@ -46,7 +46,7 @@ process.FastMonitoringService = cms.Service("FastMonitoringService",
     fastMonIntervals = cms.untracked.uint32(2),
 )
 
-raw_files = sorted(glob.glob(Path(options.rawDirectory) / "*index*.raw"))
+raw_files = sorted(glob.glob(str(Path(options.rawDirectory) / "*index*.raw")))
 raw_files = ["file:" + f for f in raw_files]
 print(raw_files)
 
