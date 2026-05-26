@@ -54,3 +54,4 @@ def create_status_table(directories):
     
     df = pd.DataFrame(rows)
     df = df.sort_values("run")
+    return df
