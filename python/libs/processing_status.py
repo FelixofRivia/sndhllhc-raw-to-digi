@@ -25,9 +25,7 @@ def create_status_table(directories):
         n_jsn = len(jsn_files)
 
         # Corresponding files
-        converted_file = (
-            directories["converted"] / run_name / f"{run_name}_converted.root"
-        )
+        converted_file = (directories["converted"] / run_name / f"{run_name}_converted.root")
 
         dqm_file = directories["histos"] / f"{run_name}_dqm.root"
 
