@@ -71,7 +71,8 @@ os.makedirs(output_dir, exist_ok=True)
 
 output_file = str(output_dir / f"run{options.runNumber:06d}_converted.root")
 if os.path.exists(output_file):  
-    os.remove(output_file)  
+    os.remove(output_file)
+    print("Replaced", output_file)  
 
 process.out = cms.OutputModule("PoolOutputModule",
     fileName       = cms.untracked.string(output_file),
