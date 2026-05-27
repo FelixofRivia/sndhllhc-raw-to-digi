@@ -71,9 +71,9 @@ def select_run(df):
 
     # Select earliest candidate
     selected_run = (
-        int(candidates["run"].min())
+        candidates["run"].min()
         if not candidates.empty
         else None
     )
 
-    return selected_run
+    return int(selected_run)
