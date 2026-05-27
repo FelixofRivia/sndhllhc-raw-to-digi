@@ -69,8 +69,12 @@ maxEvents = cms.PSet(input = cms.untracked.int32(-1))
 output_dir = Path(options.convertedDirectory) / f"run{options.runNumber:06d}"  
 os.makedirs(output_dir, exist_ok=True)  
 
+output_file = str(output_dir / f"run{options.runNumber:06d}_converted.root")
+if os.path.exists(output_file):  
+    os.remove(output_file)  
+
 process.out = cms.OutputModule("PoolOutputModule",
-    fileName       = cms.untracked.string(str(output_dir / f"run{options.runNumber:06d}_converted.root")),
+    fileName       = cms.untracked.string(output_file),
     outputCommands = cms.untracked.vstring("drop *", "keep FEDRawDataCollection_*_*_*"),
 )
 
