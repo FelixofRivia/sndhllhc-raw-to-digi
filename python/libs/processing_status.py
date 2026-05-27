@@ -55,3 +55,26 @@ def create_status_table(directories):
     if not df.empty:
         df = df.sort_values("run")
     return df
+
+def select_run(df):
+    # There cannot be less raw than jsn files
+    invalid = df[df["n_raw"] < df["n_jsn"]]
+
+    if not invalid.empty:
+        print("ERROR: found rows with n_raw < n_jsn")
+        print(invalid[["run", "n_raw", "n_jsn"]])
+
+    # Candidate rows:
+    #   - n_raw > n_jsn (needs conversion + dqm)
+    #   - n_raw == n_jsn and dqm_up_to_date is False (needs dqm only)
+    candidates = df[(df["n_raw"] > df["n_jsn"]) | ((df["n_raw"] == df["n_jsn"]) & (~df["dqm_up_to_date"]))]
+
+    # Select earliest candidate
+    selected_run = (
+        candidates["run"].min()
+        if not candidates.empty
+        else None
+    )
+
+    print("selected_run =", selected_run)
+    return selected_run

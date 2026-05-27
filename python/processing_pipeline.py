@@ -1,7 +1,7 @@
 from pathlib import Path
 
 from libs.processing_status import create_status_table
-from libs.run_conversion import run_conversion
+from libs.run_conversion import select_run, run_conversion
 from libs.run_dqm import run_dqm
 
 def main():
@@ -19,8 +19,12 @@ def main():
     print(df)
     print(f"\nSaved summary to: {output_csv_path}")
 
-    run_conversion(directories, 1000779)
-    run_dqm(directories, 1000779)
+    selected_run = select_run(df)
+    if selected_run:
+        run_conversion(directories, selected_run)
+        run_dqm(directories, selected_run)
+    else:
+        print("Everything is up to date")
 
 if __name__ == "__main__":
     main()
