@@ -1,5 +1,5 @@
-from pathlib import Path
 import subprocess
+import logging
 
 def run_dqm(directories, run_number):
     input_root_file = directories['converted'] / f"run{run_number:06d}" / f"run{run_number:06d}_converted.root"
@@ -13,5 +13,7 @@ def run_dqm(directories, run_number):
         capture_output=True,
         text=True
     )
-    print(result.stdout)
-    print(result.stderr)
+    if result.stdout:
+        logging.info("DQM subprocess stdout:\n%s", result.stdout)
+    if result.stderr:
+        logging.error("DQM subprocess stderr:\n%s", result.stderr)

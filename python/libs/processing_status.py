@@ -1,5 +1,6 @@
 from datetime import datetime
 import pandas as pd
+import logging
 
 def file_modified_time(path):
     if path.exists():
@@ -61,8 +62,8 @@ def select_run(df):
     invalid = df[df["n_raw"] < df["n_jsn"]]
 
     if not invalid.empty:
-        print("ERROR: found rows with n_raw < n_jsn")
-        print(invalid[["run", "n_raw", "n_jsn"]])
+        logging.error("Found invalid run with n_raw < n_jsn")
+        logging.error("\n%s", invalid[["run", "n_raw", "n_jsn"]].to_string(index=False))
 
     # Candidate rows:
     #   - n_raw > n_jsn (needs conversion + dqm)
