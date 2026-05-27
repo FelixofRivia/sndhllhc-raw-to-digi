@@ -1,11 +1,15 @@
 import subprocess
 import logging
+import time
 
 def run_dqm(directories, run_number):
     input_root_file = directories['converted'] / f"run{run_number:06d}" / f"run{run_number:06d}_converted.root"
     output_root_file = directories['histos'] / f"run{run_number:06d}_dqm.root"
     detinfo_csv = "./../build/tests/data/detector_info.csv"
     make_histos = f"./../build/bin/real_time_monitoring {input_root_file} {detinfo_csv} {output_root_file} 1"
+
+    start = time.perf_counter()
+    
     result = subprocess.run(
         make_histos,
         shell=True,
@@ -13,7 +17,15 @@ def run_dqm(directories, run_number):
         capture_output=True,
         text=True
     )
+
+    duration = time.perf_counter() - start
+
+    tag = f"[run {run_number:06d}]"
+
     if result.stdout:
-        logging.info("DQM subprocess stdout:\n%s", result.stdout)
+        logging.info("%s DQM subprocess stdout:\n%s", tag, result.stdout)
+
     if result.stderr:
-        logging.error("DQM subprocess stderr:\n%s", result.stderr)
+        logging.error("%s DQM subprocess stderr:\n%s", tag, result.stderr)
+
+    logging.info("%s DQM finished in %.2f seconds", tag, duration)
