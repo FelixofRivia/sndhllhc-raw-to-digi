@@ -10,8 +10,8 @@ def run_conversion(directories, run_number):
     current_dir = Path.cwd()
     source_cms = "source /cvmfs/cms.cern.ch/cmsset_default.sh"
     cmsenv = f"cd {directories['cmssw_src']} && cmsenv && cd {current_dir}"
+    # If data is on eos, this is needed to release locks on files
     clean_previous_conversion = f"rm -rf {raw_folder / '*index*.jsn'} {raw_folder / 'processing'} {raw_folder / 'open'} {raw_folder / 'mon'} {raw_folder / '*BoLS.jsn'} {raw_folder / 'fu.lock'}"
-    #clean_previous_conversion = f"rm -rf {raw_folder} && cp -r /home/filippo/conversion/back/run1000779_bak {raw_folder}"
     reset_progress = f"printf '1 0' > {raw_folder / 'fu.lock'}"
     conversion = f"cmsRun cms_raw_evt_building.py rawDirectory={directories['raw']} convertedDirectory={directories['converted']} runNumber={run_number}"
 

@@ -44,7 +44,7 @@ def main():
             if selected_run is not None:
                 logging.info("Selected run: %s", selected_run)
                 run_conversion(directories, selected_run)
-                #run_dqm(directories, selected_run)
+                run_dqm(directories, selected_run)
 
             else:
                 logging.info("Everything is up to date")
