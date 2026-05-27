@@ -49,7 +49,7 @@ process.FastMonitoringService = cms.Service("FastMonitoringService",
 
 raw_files = sorted(glob.glob(str(Path(options.rawDirectory) / f"run{options.runNumber:06d}" / "*index*.raw")))
 raw_files = ["file:" + f for f in raw_files]
-print(raw_files)
+print("Converting", len(raw_files), ".raw files")
 
 process.source = cms.Source("FedRawDataInputSource",
     fileNames        = cms.untracked.vstring(raw_files),
