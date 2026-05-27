@@ -21,6 +21,7 @@ def main():
 
     selected_run = select_run(df)
     if selected_run:
+        print("selected_run =", selected_run)
         run_conversion(directories, selected_run)
         run_dqm(directories, selected_run)
     else:
