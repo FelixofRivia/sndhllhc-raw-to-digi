@@ -36,11 +36,11 @@ if not options.rawDirectory or not options.convertedDirectory or not options.run
 process = cms.Process("Convert")
 process.load("DQM.SiStripCommon.MessageLogger_cfi")
 
-process.MessageLogger = cms.Service("MessageLogger",  
-    cerr = cms.untracked.PSet(  
-        threshold = cms.untracked.string('WARNING'),  
-    ),  
-)
+# process.MessageLogger = cms.Service("MessageLogger",  
+#     cerr = cms.untracked.PSet(  
+#         threshold = cms.untracked.string('WARNING'),  
+#     ),  
+# )
 
 process.EvFDaqDirector = cms.Service("EvFDaqDirector",
     baseDir   = cms.untracked.string(options.rawDirectory),

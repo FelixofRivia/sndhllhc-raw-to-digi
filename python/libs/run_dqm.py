@@ -3,15 +3,20 @@ import logging
 import time
 
 def run_dqm(directories, run_number):
+    tag = f"[run {run_number:06d}]"
+
     input_root_file = directories['converted'] / f"run{run_number:06d}" / f"run{run_number:06d}_converted.root"
     output_root_file = directories['histos'] / f"run{run_number:06d}_dqm.root"
     detinfo_csv = "./../build/tests/data/detector_info.csv"
-    make_histos = f"./../build/bin/real_time_monitoring {input_root_file} {detinfo_csv} {output_root_file} 1"
+
+    command = f"./../build/bin/real_time_monitoring {input_root_file} {detinfo_csv} {output_root_file} 1"
+
+    logging.debug("%s Running DQM command: %s", tag, command)
 
     start = time.perf_counter()
     
     result = subprocess.run(
-        make_histos,
+        command,
         shell=True,
         executable="/bin/bash",
         capture_output=True,
@@ -19,8 +24,6 @@ def run_dqm(directories, run_number):
     )
 
     duration = time.perf_counter() - start
-
-    tag = f"[run {run_number:06d}]"
 
     if result.stdout:
         logging.info("%s DQM subprocess stdout:\n%s", tag, result.stdout)
