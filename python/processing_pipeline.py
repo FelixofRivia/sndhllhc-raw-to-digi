@@ -26,7 +26,8 @@ def main():
         ]
     )
 
-    logging.info("Directories configuration:\n%s", {k: str(v) for k, v in directories.items()})
+    logging.info("Directories configuration:\n%s", "\n".join(f"[{k}] -> {v}" for k, v in directories.items())
+)
 
     POLL_INTERVAL = 60 # seconds
 
