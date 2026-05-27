@@ -5,7 +5,7 @@ def run_conversion(directories, run_number):
     current_dir = Path.cwd()
     source_cms = "source /cvmfs/cms.cern.ch/cmsset_default.sh"
     cmsenv = f"cd /home/filippo/CMSSW_15_1_1/src && cmsenv && cd {current_dir}"
-    clean_previous_conversion = f"rm {(directories['raw'] / f'run{run_number:06d}') / '*index*.jsn'}"
+    clean_previous_conversion = f"rm -f {(directories['raw'] / f'run{run_number:06d}') / '*index*.jsn'}"
     reset_progress = f"echo '1 0' > {(directories['raw'] / f'run{run_number:06d}') / 'fu.lock'}"
     conversion = f"cmsRun cms_raw_evt_building.py rawDirectory={directories['raw']} convertedDirectory={directories['converted']} runNumber={run_number}"
     result = subprocess.run(
