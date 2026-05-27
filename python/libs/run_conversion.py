@@ -14,7 +14,7 @@ def run_conversion(directories, run_number):
     start = time.perf_counter()
 
     result = subprocess.run(
-        f"{source_cms} && {cmsenv} && {clean_previous_conversion} && {reset_progress} && {conversion}",
+        f"{source_cms} && {cmsenv} && {clean_previous_conversion} && {conversion}", #&& {reset_progress} 
         shell=True,
         executable="/bin/bash",
         capture_output=True,
