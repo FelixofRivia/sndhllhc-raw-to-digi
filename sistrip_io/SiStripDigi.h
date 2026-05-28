@@ -17,7 +17,7 @@ public:
   inline int GetStrip() const { return detector_id_ & 0x3FF; }
   inline uint32_t GetTime() const { return time_; }
   inline uint16_t GetSignal() const { return adc_; }
-  inline bool IsVertical() { return GetLayer() % 2 == 1; };
+  inline bool IsVertical() { return GetLayer() % 2 == 0; };
   inline bool IsValid() const { return is_valid_; }
 
 private:

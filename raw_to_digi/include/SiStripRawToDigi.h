@@ -63,6 +63,7 @@ std::vector<SiStripDigi> SiStripRawToDigi::operator()(const edm::Wrapper<FEDRawD
                 continue;
             }
             const uint32_t fed_key = ((fed_id & 0xFFFF) << 16) | (i_ch & 0xFFFF);
+            auto it_detinfo = index.find(i_ch);
         
             constexpr uint16_t stripStart{0};
             constexpr uint8_t num_words{1};
@@ -84,7 +85,6 @@ std::vector<SiStripDigi> SiStripRawToDigi::operator()(const edm::Wrapper<FEDRawD
                     inCluster = 0;
                 }
 
-                auto it_detinfo = index.find(i_ch);
                 if (it_detinfo == index.end()) throw std::runtime_error("fedchannel not found");
                 auto& detector_info = *(it_detinfo->second);
                 
