@@ -11,8 +11,10 @@ def run_conversion(directories, run_number):
     source_cms = "source /cvmfs/cms.cern.ch/cmsset_default.sh"
     cmsenv = f"cd {directories['cmssw_src']} && cmsenv && cd {current_dir}"
     # If data is on eos, this is needed to release locks on files
-    clean_previous_conversion = f"rm -rf {raw_folder / '*index*.jsn'} {raw_folder / 'processing'} {raw_folder / 'open'} {raw_folder / 'mon'} {raw_folder / '*BoLS.jsn'} {raw_folder / 'fu.lock'}"
-    reset_progress = f"printf '1 0' > {raw_folder / 'fu.lock'}"
+    # clean_previous_conversion = f"rm -rf {raw_folder / '*index*.jsn'} {raw_folder / 'processing'} {raw_folder / 'open'} {raw_folder / 'mon'} {raw_folder / '*BoLS.jsn'} {raw_folder / 'fu.lock'}"
+    # reset_progress = f"printf '1 0' > {raw_folder / 'fu.lock'}"
+    clean_previous_conversion = f"rm -rf /eos/experiment/sndlhc/Run4/testbeam2026/monitoring_test/run{run_number:06d}"
+    reset_progress = f"cp -r /eos/experiment/sndlhc/Run4/testbeam2026/raw_data/run{run_number:06d} /eos/experiment/sndlhc/Run4/testbeam2026/monitoring_test/run{run_number:06d}"
     conversion = f"cmsRun cms_raw_evt_building.py rawDirectory={directories['raw']} convertedDirectory={directories['converted']} runNumber={run_number}"
 
     command = f"{source_cms} && {cmsenv} && {clean_previous_conversion} && {reset_progress} && {conversion}" 
