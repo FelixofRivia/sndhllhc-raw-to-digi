@@ -20,6 +20,7 @@
 #include "SiStripIOHeaders.h"
 #include "SiStripRawToDigi.h"
 #include "SiStripDetInfo.h"
+#include "SiStripPosition.h"
 
 template <typename Ret, typename Method>
 auto ExtractRVec(Method method)
@@ -33,16 +34,19 @@ auto ExtractRVec(Method method)
 }
 
 int main(int argc, char* argv[]){
-    if (argc != 5) {
-        std::cerr << "4 arguments expected but " << argc - 1 << " provided\n";
-        std::cerr << "Usage: real_time_monitoring <input_root_file> <detector_info> <output_histos_root_file> <n_treads>\n";
+    if (argc != 6) {
+        std::cerr << "5 arguments expected but " << argc - 1 << " provided\n";
+        std::cerr << "Usage: real_time_monitoring <input_root_file> <detector_info> <geometry_file> <output_histos_root_file> <n_treads>\n";
         return 1;
     }
     std::string input_root_file(argv[1]);
     std::string detector_info_path(argv[2]);
     std::string output_root_file(argv[3]);
+    std::string geometry_file(argv[4]);
 
-    ROOT::EnableImplicitMT(std::stoi(argv[4]));
+    ROOT::EnableImplicitMT(std::stoi(argv[5]));
+
+    gGeoManager->Import(geometry_file.c_str());
 
     auto df = ROOT::RDataFrame("Events", input_root_file);
     // Perform digitization
@@ -54,7 +58,8 @@ int main(int argc, char* argv[]){
         .Define( "layer", ExtractRVec<int>(&SiStripDigi::GetLayer), {"FedChannelDigis"})
         .Define( "row", ExtractRVec<int>(&SiStripDigi::GetRow), {"FedChannelDigis"})
         .Define( "column", ExtractRVec<int>(&SiStripDigi::GetColumn), {"FedChannelDigis"})
-        .Define( "detector_id", ExtractRVec<uint32_t>(&SiStripDigi::GetDetectorId), {"FedChannelDigis"});
+        .Define( "detector_id", ExtractRVec<uint32_t>(&SiStripDigi::GetDetectorId), {"FedChannelDigis"})
+        .Define( "position", [](const ROOT::VecOps::RVec<uint32_t>& detids) {return ROOT::VecOps::Map(detids, GetSiStripPosition);}, {"detector_id"});
 
     // //If RHist is available
     // #if USE_ROOT7_RHIST

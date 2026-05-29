@@ -6,9 +6,9 @@ add_compile_options(-Wall -Wextra -Wpedantic)
 option(USE_ROOT7_RHIST "Use the experimental RHist from ROOT7 for monitoring histograms" OFF)
 
 if(USE_ROOT7_RHIST)
-    find_package(ROOT 6.40 REQUIRED COMPONENTS Core RIO Tree ROOTDataFrame ROOTHist ROOTHistUtil)
+    find_package(ROOT 6.40 REQUIRED COMPONENTS Core RIO Tree Geom ROOTDataFrame ROOTHist ROOTHistUtil)
 else()
-    find_package(ROOT 6.36 REQUIRED COMPONENTS Core RIO Tree ROOTDataFrame)
+    find_package(ROOT 6.36 REQUIRED COMPONENTS Core RIO Tree Geom ROOTDataFrame)
 endif()
 
 enable_testing()
