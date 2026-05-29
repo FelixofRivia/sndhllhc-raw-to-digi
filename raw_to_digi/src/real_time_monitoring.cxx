@@ -5,11 +5,12 @@
 #include <memory>
 #include <string>
 #include <cstdint>
+#include <numeric>
 #include "ROOT/RDataFrame.hxx"
 #include <ROOT/RVec.hxx>
 #include "TCanvas.h"
 #include "TH1D.h"
-#include <TFile.h>
+#include "TFile.h"
 
 #if USE_ROOT7_RHIST
 #include "ROOT/RHist.hxx"
@@ -76,11 +77,35 @@ int main(int argc, char* argv[]){
 
     std::vector<ROOT::RDF::RResultPtr<TH1D>> histos_1d;
     std::vector<ROOT::RDF::RResultPtr<TH2D>> histos_2d;
+    std::vector<ROOT::RDF::RResultPtr<TProfile>> profiles;
 
     const int max_layer = layer_map.rbegin()->first;
 
+    auto df4 = df3.Define("layer_vec", [max_layer]() {
+            ROOT::RVec<int> l_vec(max_layer + 1);
+            std::iota(l_vec.begin(), l_vec.end(), 0);
+            return l_vec;
+        }).Define("saturated_percentage_vec", [max_layer](const ROOT::RVec<uint16_t>& adc, const ROOT::RVec<int>& layer) {
+            ROOT::RVec<float> sat_vec(max_layer + 1);
+            for (int i{0}; i < max_layer + 1; ++i) {
+                const auto& adc_layer = adc[layer == i];
+                sat_vec[i] = adc_layer.empty() ? 0.f : 100.f * adc_layer[adc_layer > 253].size() / adc_layer.size();
+            }
+            return sat_vec;
+        }, {"adc", "layer"});
+
     histos_1d.emplace_back(df3.Histo1D<ROOT::RVec<int>>({"layer", "layer;layer;Entries", max_layer + 1, 0, static_cast<double>(max_layer + 1)}, "layer"));
     histos_1d.emplace_back(df3.Histo1D<ROOT::RVec<uint32_t>>({"det_id (advsndsw)", "det_id (advsndsw);det_id;Entries", 18000, 0, 180000}, "detector_id"));
+    histos_2d.emplace_back(df4.Histo2D<ROOT::RVec<int>, ROOT::RVec<float>>({"saturated percentage (adc > 253) vs layer", "saturated percentage (adc > 253) vs layer;layer;saturated %", max_layer + 1, 0, static_cast<double>(max_layer + 1), 101, 0, 101}, "layer_vec", "saturated_percentage_vec"));
+
+    ROOT::RDF::TProfile1DModel model(
+        "saturated percentage (adc > 253) vs layer",
+        "saturated percentage (adc > 253) vs layer;layer;saturated %",
+        max_layer + 1, 0, max_layer + 1
+    );
+    profiles.emplace_back(df4.Profile1D<float>(model, "layer_vec", "saturated_percentage_vec"));
+    // auto prof_saturation = histos_2d.back().GetPtr()->ProfileX("sat_profile_x");
+    // prof_saturation->SetTitle("saturated percentage (adc > 253) vs layer;layer;<saturated %>");
 
     for (const auto& [layer, modules] : layer_map) {
 
@@ -98,16 +123,19 @@ int main(int argc, char* argv[]){
             std::string h_adc_name = Form("adc Layer %d Row %d Column %d", layer, row, col);
             std::string h_strip_name = Form("strip Layer %d Row %d Column %d", layer, row, col);
             std::string h_nhits_name = Form("nhits Layer %d Row %d Column %d", layer, row, col);
+            std::string h_saturated_percentage_name = Form("saturated percentage (adc > 253) Layer %d Row %d Column %d", layer, row, col);
             std::string h_adc_vs_strip_name = Form("adc vs strip Layer %d Row %d Column %d", layer, row, col);
 
             std::string select_adc = Form("adc[(layer == %d) && (row == %d) && (column == %d)]", layer, row, col);
             std::string select_strip = Form("strip[(layer == %d) && (row == %d) && (column == %d)]", layer, row, col);
+            std::string compute_saturated_percentage = Form("adc_module.empty() ? 0.f : 100.f * adc_module[adc_module > 253].size() / adc_module.size()");
 
-            auto df_module = df3.Define("adc_module", select_adc).Define("sistrip_module", select_strip).Define("nhits_module", "adc_module.size()");
+            auto df_module = df3.Define("adc_module", select_adc).Define("sistrip_module", select_strip).Define("nhits_module", "adc_module.size()").Define("saturated_percentage_module", compute_saturated_percentage);
 
             histos_1d.emplace_back(df_module.Histo1D<ROOT::RVec<uint16_t>>({h_adc_name.c_str(), (h_adc_name + std::string(";adc;Entries")).c_str(), 512, 0, 512}, "adc_module"));
             histos_1d.emplace_back(df_module.Histo1D<ROOT::RVec<uint16_t>>({h_strip_name.c_str(), (h_strip_name + std::string(";strip;Entries")).c_str(), 756, 0, 756}, "sistrip_module"));
             histos_1d.emplace_back(df_module.Histo1D<std::size_t>({h_nhits_name.c_str(), (h_nhits_name + std::string(";nhits;Entries")).c_str(), 756, 0, 756}, "nhits_module"));
+            histos_1d.emplace_back(df_module.Histo1D<float>({h_saturated_percentage_name.c_str(), (h_saturated_percentage_name + std::string(";saturated %;Entries")).c_str(), 101, 0, 101}, "saturated_percentage_module"));
             histos_2d.emplace_back(df_module.Histo2D<ROOT::RVec<uint16_t>, ROOT::RVec<uint16_t>>({h_adc_vs_strip_name.c_str(), (h_adc_vs_strip_name + std::string(";strip;adc;Entries")).c_str(), 756, 0, 756, 512, 0, 512}, "sistrip_module", "adc_module"));
         }
     }
@@ -120,6 +148,10 @@ int main(int argc, char* argv[]){
 
     for (auto& h : histos_2d) {
         h->Write();
+    }
+
+    for (auto& p : profiles) {
+        p->Write();
     }
 
     output_file.Close();
