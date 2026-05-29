@@ -9,7 +9,7 @@ from libs.run_dqm import run_dqm
 
 def main():
     directories = {
-        "raw" : Path("/eos/experiment/sndlhc/Run4/testbeam2026/monitoring_test"), #Path("/eos/experiment/sndlhc/Run4/testbeam2026/monitoring_test"), Path("/home/filippo/data_for_monitor/raw_data")
+        "raw" : Path("/eos/experiment/sndlhc/Run4/testbeam2026/raw_data"), #Path("/eos/experiment/sndlhc/Run4/testbeam2026/monitoring_test"), Path("/home/filippo/data_for_monitor/raw_data")
         "converted" : Path("/eos/experiment/sndlhc/Run4/testbeam2026/converted_data"), #Path("/eos/experiment/sndlhc/Run4/testbeam2026/converted_data"), Path("/home/filippo/data_for_monitor/converted_data")
         "histos" : Path("/eos/experiment/sndlhc/www/testbeam2026"),
         "logs" : Path("/eos/experiment/sndlhc/www/testbeam2026/logs"),
