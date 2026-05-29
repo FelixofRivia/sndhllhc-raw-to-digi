@@ -10,7 +10,10 @@ def file_modified_time(path):
 
 def create_status_table(directories):
     rows = []
-    for run_dir in sorted(directories["raw"].glob("run*")):
+
+    # Skip non valid runs in tb 2026
+    runs = [p for p in directories["raw"].glob("run*") if int(p.name.replace("run", "")) >= 273]
+    for run_dir in sorted(runs):
 
         if not run_dir.is_dir():
             continue
