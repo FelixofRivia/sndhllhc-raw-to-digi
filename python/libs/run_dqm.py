@@ -9,7 +9,7 @@ def run_dqm(directories, run_number):
     output_root_file = directories['histos'] / f"run{run_number:06d}_dqm.root"
     detinfo_csv = "./../tests/data/detector_info_tb2026.csv"
 
-    command = f"./../build/bin/real_time_monitoring {input_root_file} {detinfo_csv} {directories['geometry']} {output_root_file} 1"
+    command = f"./../build/bin/real_time_monitoring {input_root_file} {detinfo_csv} {directories['geometry']} {output_root_file} 2"
 
     logging.debug("%s Running DQM command: %s", tag, command)
 
