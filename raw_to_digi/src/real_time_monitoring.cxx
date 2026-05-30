@@ -19,6 +19,7 @@
 
 #include "SiStripIOHeaders.h"
 #include "SiStripRawToDigi.h"
+#include "SiStripDigiClustering.h"
 #include "SiStripDetInfo.h"
 #include "SiStripPosition.h"
 
@@ -49,8 +50,9 @@ int main(int argc, char* argv[]){
     gGeoManager->Import(geometry_file.c_str());
 
     auto df = ROOT::RDataFrame("Events", input_root_file);
-    // Perform digitization
-    auto df2 = df.Define("FedChannelDigis", SiStripRawToDigi(detector_info_path), {"FEDRawDataCollection_rawDataCollector__LHC."});
+    // Perform digitization + clustering
+    auto df2 = df.Define("FedChannelDigis_not_clustered", SiStripRawToDigi(detector_info_path), {"FEDRawDataCollection_rawDataCollector__LHC."})
+        .Define("FedChannelDigis", SiStripDigiClustering(), {"FedChannelDigis_not_clustered"});
     // Prepare columns for histos
     auto df3 = df2.Define("adc", ExtractRVec<uint16_t>(&SiStripDigi::GetSignal), {"FedChannelDigis"})
         .Define( "strip", ExtractRVec<uint16_t>(&SiStripDigi::GetStrip), {"FedChannelDigis"})
