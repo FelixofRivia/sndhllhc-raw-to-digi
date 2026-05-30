@@ -35,11 +35,11 @@ std::vector<SiStripDigi> SiStripRawToDigi::operator()(const edm::Wrapper<FEDRawD
         const FEDRawData& raw_data = sistrip_raw.obj.data_[fed_id];
         FEDBuffer buffer(raw_data);
         if (!buffer.isValid()) {
-            std::cout << "Buffer is not valid, skipping FED.\n";
+            std::cout << "Buffer is not valid, skipping FED " << fed_id << "\n";
             continue;
         }
         if (!buffer.isZeroSuppressed()) {
-            std::cout << "Only Zero Suppressed mode is supported, skipping FED.\n";
+            std::cout << "Only Zero Suppressed mode is supported, skipping FED " << fed_id << "\n";
             continue;
         }
 

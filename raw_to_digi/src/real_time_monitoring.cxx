@@ -41,8 +41,8 @@ int main(int argc, char* argv[]){
     }
     std::string input_root_file(argv[1]);
     std::string detector_info_path(argv[2]);
-    std::string output_root_file(argv[3]);
-    std::string geometry_file(argv[4]);
+    std::string geometry_file(argv[3]);
+    std::string output_root_file(argv[4]);
 
     ROOT::EnableImplicitMT(std::stoi(argv[5]));
 
@@ -59,7 +59,15 @@ int main(int argc, char* argv[]){
         .Define( "row", ExtractRVec<int>(&SiStripDigi::GetRow), {"FedChannelDigis"})
         .Define( "column", ExtractRVec<int>(&SiStripDigi::GetColumn), {"FedChannelDigis"})
         .Define( "detector_id", ExtractRVec<uint32_t>(&SiStripDigi::GetDetectorId), {"FedChannelDigis"})
-        .Define( "position", [](const ROOT::VecOps::RVec<uint32_t>& detids) {return ROOT::VecOps::Map(detids, GetSiStripPosition);}, {"detector_id"});
+        .Define( "is_vertical", ExtractRVec<bool>(&SiStripDigi::IsVertical), {"FedChannelDigis"})
+        .Define( "position", [](const ROOT::VecOps::RVec<uint32_t>& detids) {return ROOT::VecOps::Map(detids, GetSiStripPosition);}, {"detector_id"})
+        .Define( "x", [](const ROOT::VecOps::RVec<ROOT::Math::XYZPoint>& points) {return ROOT::VecOps::Map(points, [](const auto& p) { return p.X(); });}, {"position"})
+        .Define( "y", [](const ROOT::VecOps::RVec<ROOT::Math::XYZPoint>& points) {return ROOT::VecOps::Map(points, [](const auto& p) { return p.Y(); });}, {"position"})
+        .Define( "z", [](const ROOT::VecOps::RVec<ROOT::Math::XYZPoint>& points) {return ROOT::VecOps::Map(points, [](const auto& p) { return p.Z(); });}, {"position"})
+        .Define( "x_vertical", "x[is_vertical]")
+        .Define( "y_not_vertical", "y[is_vertical == false]")
+        .Define( "z_vertical", "z[is_vertical]")
+        .Define( "z_not_vertical", "z[is_vertical == false]");
 
     // //If RHist is available
     // #if USE_ROOT7_RHIST
@@ -99,9 +107,16 @@ int main(int argc, char* argv[]){
             return sat_vec;
         }, {"adc", "layer"});
 
+
     histos_1d.emplace_back(df3.Histo1D<ROOT::RVec<int>>({"layer", "layer;layer;Entries", max_layer + 1, 0, static_cast<double>(max_layer + 1)}, "layer"));
     histos_1d.emplace_back(df3.Histo1D<ROOT::RVec<uint32_t>>({"det_id (advsndsw)", "det_id (advsndsw);det_id;Entries", 18000, 0, 180000}, "detector_id"));
     histos_2d.emplace_back(df4.Histo2D<ROOT::RVec<int>, ROOT::RVec<float>>({"saturated percentage (adc > 253) vs layer", "saturated percentage (adc > 253) vs layer;layer;saturated %", max_layer + 1, 0, static_cast<double>(max_layer + 1), 101, 0, 101}, "layer_vec", "saturated_percentage_vec"));
+
+    histos_1d.emplace_back(df3.Histo1D<ROOT::RVec<double>>({"x", "x;x [cm];Entries", 1000, -30, 0}, "x_vertical"));
+    histos_1d.emplace_back(df3.Histo1D<ROOT::RVec<double>>({"y", "y;y [cm];Entries", 1000, 15, 45}, "y_not_vertical"));
+    histos_1d.emplace_back(df3.Histo1D<ROOT::RVec<double>>({"z", "z;z [cm];Entries", 1000, 165, 195}, "z"));
+    histos_2d.emplace_back(df4.Histo2D<ROOT::RVec<double>, ROOT::RVec<double>>({"x vs z", "x vs z;z [cm];x [cm]", 1000, 165, 195, 1000, -30, 0}, "z_vertical", "x_vertical"));
+    histos_2d.emplace_back(df4.Histo2D<ROOT::RVec<double>, ROOT::RVec<double>>({"y vs z", "y vs z;z [cm];y [cm]", 1000, 165, 195, 1000, 15, 45}, "z_not_vertical", "y_not_vertical"));
 
     ROOT::RDF::TProfile1DModel model(
         "saturated percentage (adc > 253) vs layer",
@@ -109,8 +124,6 @@ int main(int argc, char* argv[]){
         max_layer + 1, 0, max_layer + 1
     );
     profiles.emplace_back(df4.Profile1D<float>(model, "layer_vec", "saturated_percentage_vec"));
-    // auto prof_saturation = histos_2d.back().GetPtr()->ProfileX("sat_profile_x");
-    // prof_saturation->SetTitle("saturated percentage (adc > 253) vs layer;layer;<saturated %>");
 
     for (const auto& [layer, modules] : layer_map) {
 
@@ -137,17 +150,18 @@ int main(int argc, char* argv[]){
 
             auto df_module = df3.Define("adc_module", select_adc).Define("sistrip_module", select_strip).Define("nhits_module", "adc_module.size()").Define("saturated_percentage_module", compute_saturated_percentage);
 
-            histos_1d.emplace_back(df_module.Histo1D<ROOT::RVec<uint16_t>>({h_adc_name.c_str(), (h_adc_name + std::string(";adc;Entries")).c_str(), 512, 0, 512}, "adc_module"));
+            histos_1d.emplace_back(df_module.Histo1D<ROOT::RVec<uint16_t>>({h_adc_name.c_str(), (h_adc_name + std::string(";adc;Entries")).c_str(), 256, 0, 256}, "adc_module"));
             histos_1d.emplace_back(df_module.Histo1D<ROOT::RVec<uint16_t>>({h_strip_name.c_str(), (h_strip_name + std::string(";strip;Entries")).c_str(), 756, 0, 756}, "sistrip_module"));
             histos_1d.emplace_back(df_module.Histo1D<std::size_t>({h_nhits_name.c_str(), (h_nhits_name + std::string(";nhits;Entries")).c_str(), 756, 0, 756}, "nhits_module"));
             histos_1d.emplace_back(df_module.Histo1D<float>({h_saturated_percentage_name.c_str(), (h_saturated_percentage_name + std::string(";saturated %;Entries")).c_str(), 101, 0, 101}, "saturated_percentage_module"));
-            histos_2d.emplace_back(df_module.Histo2D<ROOT::RVec<uint16_t>, ROOT::RVec<uint16_t>>({h_adc_vs_strip_name.c_str(), (h_adc_vs_strip_name + std::string(";strip;adc;Entries")).c_str(), 756, 0, 756, 512, 0, 512}, "sistrip_module", "adc_module"));
+            histos_2d.emplace_back(df_module.Histo2D<ROOT::RVec<uint16_t>, ROOT::RVec<uint16_t>>({h_adc_vs_strip_name.c_str(), (h_adc_vs_strip_name + std::string(";strip;adc;Entries")).c_str(), 756, 0, 756, 256, 0, 256}, "sistrip_module", "adc_module"));
         }
     }
 
     TFile output_file(output_root_file.c_str(), "RECREATE");
 
     for (auto& h : histos_1d) {
+        h->SetFillColor(kAzure - 9);
         h->Write();
     }
 
