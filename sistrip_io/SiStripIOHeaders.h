@@ -6,3 +6,4 @@
 #include "FEDRawData.h"
 
 #include "SiStripDigi.h"
+#include "SiStripCluster.h"

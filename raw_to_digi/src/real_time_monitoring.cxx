@@ -20,6 +20,7 @@
 #include "SiStripIOHeaders.h"
 #include "SiStripRawToDigi.h"
 #include "SiStripDigiClustering.h"
+#include "SiStripDigiFilter.h"
 #include "SiStripDetInfo.h"
 #include "SiStripPosition.h"
 
@@ -52,7 +53,8 @@ int main(int argc, char* argv[]){
     auto df = ROOT::RDataFrame("Events", input_root_file);
     // Perform digitization + clustering
     auto df2 = df.Define("FedChannelDigis_not_clustered", SiStripRawToDigi(detector_info_path), {"FEDRawDataCollection_rawDataCollector__LHC."})
-        .Define("FedChannelDigis", SiStripDigiClustering(), {"FedChannelDigis_not_clustered"});
+        .Define("FedChannelDigis", SiStripDigiFilter(), {"FedChannelDigis_not_clustered"})
+        .Define("Cluster", SiStripDigiClustering(), {"FedChannelDigis_not_clustered"});
     // Prepare columns for histos
     auto df3 = df2.Define("adc", ExtractRVec<uint16_t>(&SiStripDigi::GetSignal), {"FedChannelDigis"})
         .Define( "strip", ExtractRVec<uint16_t>(&SiStripDigi::GetStrip), {"FedChannelDigis"})
@@ -69,7 +71,62 @@ int main(int argc, char* argv[]){
         .Define( "x_vertical", "x[is_vertical]")
         .Define( "y_not_vertical", "y[is_vertical == false]")
         .Define( "z_vertical", "z[is_vertical]")
-        .Define( "z_not_vertical", "z[is_vertical == false]");
+        .Define( "z_not_vertical", "z[is_vertical == false]")
+        .Define("cluster_adc",
+            [](const std::vector<SiStripCluster>& c) {
+                ROOT::RVec<uint32_t> out;
+                out.reserve(c.size());
+
+                for (const auto& cl : c)
+                    out.push_back(cl.adc_);
+
+                return out;
+            },
+            {"Cluster"})
+        .Define("cluster_size",
+            [](const std::vector<SiStripCluster>& c) {
+                ROOT::RVec<size_t> out;
+                out.reserve(c.size());
+
+                for (const auto& cl : c)
+                    out.push_back(cl.size_);
+
+                return out;
+            },
+            {"Cluster"})
+        .Define("cluster_layer",
+            [](const std::vector<SiStripCluster>& c) {
+                ROOT::RVec<int> out;
+                out.reserve(c.size());
+
+                for (const auto& cl : c)
+                    out.push_back(cl.layer_);
+
+                return out;
+            },
+            {"Cluster"})
+        .Define("cluster_row",
+            [](const std::vector<SiStripCluster>& c) {
+                ROOT::RVec<int> out;
+                out.reserve(c.size());
+
+                for (const auto& cl : c)
+                    out.push_back(cl.row_);
+
+                return out;
+            },
+            {"Cluster"})
+        .Define("cluster_column",
+            [](const std::vector<SiStripCluster>& c) {
+                ROOT::RVec<int> out;
+                out.reserve(c.size());
+
+                for (const auto& cl : c)
+                    out.push_back(cl.column_);
+
+                return out;
+            },
+            {"Cluster"});
 
     // //If RHist is available
     // #if USE_ROOT7_RHIST
@@ -136,14 +193,14 @@ int main(int argc, char* argv[]){
     histos_2d.emplace_back(df4.Histo2D<ROOT::RVec<double>, ROOT::RVec<double>>({"y vs z", "y vs z;z [cm];y [cm]", 1000, z_min, z_max, 1000, y_min, y_max}, "z_not_vertical", "y_not_vertical"));
 
     ROOT::RDF::TProfile1DModel saturation_model(
-        "saturated percentage (adc > 253) vs layer",
+        "saturated percentage (adc > 253) vs layer (profiled)",
         "saturated percentage (adc > 253) vs layer;layer;saturated %",
         max_layer + 1, 0, max_layer + 1
     );
     profiles.emplace_back(df4.Profile1D<float>(saturation_model, "layer_vec", "saturated_percentage_vec"));
 
     ROOT::RDF::TProfile1DModel adc_model(
-        "adc sum vs layer",
+        "adc sum vs layer (profiled)",
         "adc sum vs layer;layer;adc sum",
         max_layer + 1, 0, max_layer + 1
     );
@@ -179,16 +236,23 @@ int main(int argc, char* argv[]){
             std::string h_nhits_name = Form("nhits Layer %d Row %d Column %d", layer, row, col);
             std::string h_saturated_percentage_name = Form("saturated percentage (adc > 253) Layer %d Row %d Column %d", layer, row, col);
             std::string h_adc_vs_strip_name = Form("adc vs strip Layer %d Row %d Column %d", layer, row, col);
+            std::string h_cluster_adc_name = Form("cluster adc Layer %d Row %d Column %d", layer, row, col);
+            std::string h_cluster_size_name = Form("cluster size Layer %d Row %d Column %d", layer, row, col);
 
             std::string select_adc = Form("adc[(layer == %d) && (row == %d) && (column == %d)]", layer, row, col);
             std::string select_strip = Form("strip[(layer == %d) && (row == %d) && (column == %d)]", layer, row, col);
             std::string compute_saturated_percentage = Form("adc_module.empty() ? 0.f : 100.f * adc_module[adc_module > 253].size() / adc_module.size()");
+            std::string select_cluster_adc = Form("cluster_adc[(cluster_layer == %d) && (cluster_row == %d) && (cluster_column == %d)]", layer, row, col);
+            std::string select_cluster_size = Form("cluster_size[(cluster_layer == %d) && (cluster_row == %d) && (cluster_column == %d)]", layer, row, col);
 
-            auto df_module = df3.Define("adc_module", select_adc).Define("sistrip_module", select_strip).Define("nhits_module", "adc_module.size()").Define("saturated_percentage_module", compute_saturated_percentage);
+            auto df_module = df3.Define("adc_module", select_adc).Define("sistrip_module", select_strip).Define("nhits_module", "adc_module.size()").Define("saturated_percentage_module", compute_saturated_percentage)
+                .Define("cluster_adc_module", select_cluster_adc).Define("cluster_size_module", select_cluster_size);
 
             histos_1d.emplace_back(df_module.Histo1D<ROOT::RVec<uint16_t>>({h_adc_name.c_str(), (h_adc_name + std::string(";adc;Entries")).c_str(), 256, 0, 256}, "adc_module"));
             histos_1d.emplace_back(df_module.Histo1D<ROOT::RVec<uint16_t>>({h_strip_name.c_str(), (h_strip_name + std::string(";strip;Entries")).c_str(), 756, 0, 756}, "sistrip_module"));
             histos_1d.emplace_back(df_module.Histo1D<std::size_t>({h_nhits_name.c_str(), (h_nhits_name + std::string(";nhits;Entries")).c_str(), 756, 0, 756}, "nhits_module"));
+            histos_1d.emplace_back(df_module.Histo1D<ROOT::RVec<uint32_t>>({h_cluster_adc_name.c_str(), (h_cluster_adc_name + std::string(";adc;Entries")).c_str(), 3000, 0, 3000}, "cluster_adc_module"));
+            histos_1d.emplace_back(df_module.Histo1D<ROOT::RVec<size_t>>({h_cluster_size_name.c_str(), (h_cluster_size_name + std::string(";size;Entries")).c_str(), 100, 0, 100}, "cluster_size_module"));
             histos_1d.emplace_back(df_module.Histo1D<float>({h_saturated_percentage_name.c_str(), (h_saturated_percentage_name + std::string(";saturated %;Entries")).c_str(), 101, 0, 101}, "saturated_percentage_module"));
             histos_2d.emplace_back(df_module.Histo2D<ROOT::RVec<uint16_t>, ROOT::RVec<uint16_t>>({h_adc_vs_strip_name.c_str(), (h_adc_vs_strip_name + std::string(";strip;adc;Entries")).c_str(), 756, 0, 756, 256, 0, 256}, "sistrip_module", "adc_module"));
         }

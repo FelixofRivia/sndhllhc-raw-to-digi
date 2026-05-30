@@ -1,5 +1,5 @@
-#ifndef SNDHLLHC_SISTRIP_DIGI_CLUSTERING_H
-#define SNDHLLHC_SISTRIP_DIGI_CLUSTERING_H
+#ifndef SNDHLLHC_SISTRIP_DIGI_FILTER_H
+#define SNDHLLHC_SISTRIP_DIGI_FILTER_H
 
 #include "SiStripIOHeaders.h"
 #include "SiStripHardwareConstants.h"
@@ -7,13 +7,13 @@
 #include <map>
 #include <cstdint>
 
-class SiStripDigiClustering {
+class SiStripDigiFilter {
     public:
-        SiStripDigiClustering() { ; }
-        std::vector<SiStripCluster> operator()(const std::vector<SiStripDigi>& input_digis) const;
+        SiStripDigiFilter() { ; }
+        std::vector<SiStripDigi> operator()(const std::vector<SiStripDigi>& input_digis) const;
 };
 
-std::vector<SiStripCluster> SiStripDigiClustering::operator()(const std::vector<SiStripDigi>& input_digis) const
+std::vector<SiStripDigi> SiStripDigiFilter::operator()(const std::vector<SiStripDigi>& input_digis) const
 {
     std::map<Module, std::vector<SiStripDigi>> grouped;
 
@@ -23,7 +23,7 @@ std::vector<SiStripCluster> SiStripDigiClustering::operator()(const std::vector<
         grouped[{d.GetLayer(), d.GetRow(), d.GetColumn()}].push_back(d);
     }
 
-    std::vector<SiStripCluster> clusters;
+    std::vector<SiStripDigi> clustered_output;
 
     constexpr uint16_t seed_thr  = 3.0f * SISTRIP_NOISE_ADC;
     constexpr uint16_t neigh_thr = 2.0f * SISTRIP_NOISE_ADC;
@@ -97,12 +97,9 @@ std::vector<SiStripCluster> SiStripDigiClustering::operator()(const std::vector<
             uint16_t threshold = cluster.size() * cluster_cut_factor;
 
             if (sum_signal > threshold)
-            {   
-                uint32_t cluster_adc{0};
+            {
                 for (auto idx : cluster)
-                    cluster_adc += digis[idx].GetSignal();
-                clusters.emplace_back(SiStripCluster{cluster_adc, cluster.size(), digis.front().GetLayer(), digis.front().GetRow(), digis.front().GetColumn()});
-
+                    clustered_output.push_back(digis[idx]);
             }
             else
             {
@@ -113,7 +110,7 @@ std::vector<SiStripCluster> SiStripDigiClustering::operator()(const std::vector<
         }
     }
 
-    return clusters;
+    return clustered_output;
 }
 
 #endif
