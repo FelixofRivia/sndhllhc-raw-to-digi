@@ -95,6 +95,12 @@ int main(int argc, char* argv[]){
     std::vector<ROOT::RDF::RResultPtr<TProfile>> profiles;
 
     const int max_layer = layer_map.rbegin()->first;
+    constexpr double x_min = -30.0;
+    constexpr double x_max = 0.0;
+    constexpr double y_min = 15.0;
+    constexpr double y_max = 45.0;
+    constexpr double z_min = 165.0;
+    constexpr double z_max = 195.0;
 
     auto df4 = df3.Define("layer_vec", [max_layer]() {
             ROOT::RVec<int> l_vec(max_layer + 1);
@@ -107,37 +113,65 @@ int main(int argc, char* argv[]){
                 sat_vec[i] = adc_layer.empty() ? 0.f : 100.f * adc_layer[adc_layer > 253].size() / adc_layer.size();
             }
             return sat_vec;
+        }, {"adc", "layer"})
+        .Define("adc_vec", [max_layer](const ROOT::RVec<uint16_t>& adc, const ROOT::RVec<int>& layer) {
+            ROOT::RVec<uint32_t> adc_vec(max_layer + 1, 0);
+            for (int i{0}; i < max_layer + 1; ++i) {
+                adc_vec[i] = ROOT::VecOps::Sum(adc[layer == i]);
+            }
+            return adc_vec;
         }, {"adc", "layer"});
 
 
     histos_1d.emplace_back(df3.Histo1D<ROOT::RVec<int>>({"layer", "layer;layer;Entries", max_layer + 1, 0, static_cast<double>(max_layer + 1)}, "layer"));
     histos_1d.emplace_back(df3.Histo1D<ROOT::RVec<uint32_t>>({"det_id (advsndsw)", "det_id (advsndsw);det_id;Entries", 18000, 0, 180000}, "detector_id"));
     histos_2d.emplace_back(df4.Histo2D<ROOT::RVec<int>, ROOT::RVec<float>>({"saturated percentage (adc > 253) vs layer", "saturated percentage (adc > 253) vs layer;layer;saturated %", max_layer + 1, 0, static_cast<double>(max_layer + 1), 101, 0, 101}, "layer_vec", "saturated_percentage_vec"));
+    histos_2d.emplace_back(df4.Histo2D<ROOT::RVec<int>, ROOT::RVec<uint32_t>>({"adc sum vs layer", "adc sum vs layer;layer;adc sum", max_layer + 1, 0, static_cast<double>(max_layer + 1), 1000, 0, 30000}, "layer_vec", "adc_vec"));
+    histos_2d.emplace_back(df4.Histo2D<ROOT::RVec<double>, ROOT::RVec<double>>({"x vs z", "x vs z;z [cm];x [cm]", 1000, z_min, z_max, 1000, x_min, x_max}, "z_vertical", "x_vertical"));
 
-    histos_1d.emplace_back(df3.Histo1D<ROOT::RVec<double>>({"x", "x;x [cm];Entries", 1000, -30, 0}, "x_vertical"));
-    histos_1d.emplace_back(df3.Histo1D<ROOT::RVec<double>>({"y", "y;y [cm];Entries", 1000, 15, 45}, "y_not_vertical"));
-    histos_1d.emplace_back(df3.Histo1D<ROOT::RVec<double>>({"z", "z;z [cm];Entries", 1000, 165, 195}, "z"));
-    histos_2d.emplace_back(df4.Histo2D<ROOT::RVec<double>, ROOT::RVec<double>>({"x vs z", "x vs z;z [cm];x [cm]", 1000, 165, 195, 1000, -30, 0}, "z_vertical", "x_vertical"));
-    histos_2d.emplace_back(df4.Histo2D<ROOT::RVec<double>, ROOT::RVec<double>>({"y vs z", "y vs z;z [cm];y [cm]", 1000, 165, 195, 1000, 15, 45}, "z_not_vertical", "y_not_vertical"));
+    histos_1d.emplace_back(df3.Histo1D<ROOT::RVec<double>>({"x", "x;x [cm];Entries", 1000, x_min, x_max}, "x_vertical"));
+    histos_1d.emplace_back(df3.Histo1D<ROOT::RVec<double>>({"y", "y;y [cm];Entries", 1000, y_min, y_max}, "y_not_vertical"));
+    histos_1d.emplace_back(df3.Histo1D<ROOT::RVec<double>>({"z", "z;z [cm];Entries", 1000, z_min, z_max}, "z"));
+    histos_2d.emplace_back(df4.Histo2D<ROOT::RVec<double>, ROOT::RVec<double>>({"x vs z", "x vs z;z [cm];x [cm]", 1000, z_min, z_max, 1000, x_min, x_max}, "z_vertical", "x_vertical"));
+    histos_2d.emplace_back(df4.Histo2D<ROOT::RVec<double>, ROOT::RVec<double>>({"y vs z", "y vs z;z [cm];y [cm]", 1000, z_min, z_max, 1000, y_min, y_max}, "z_not_vertical", "y_not_vertical"));
 
-    ROOT::RDF::TProfile1DModel model(
+    ROOT::RDF::TProfile1DModel saturation_model(
         "saturated percentage (adc > 253) vs layer",
         "saturated percentage (adc > 253) vs layer;layer;saturated %",
         max_layer + 1, 0, max_layer + 1
     );
-    profiles.emplace_back(df4.Profile1D<float>(model, "layer_vec", "saturated_percentage_vec"));
+    profiles.emplace_back(df4.Profile1D<float>(saturation_model, "layer_vec", "saturated_percentage_vec"));
+
+    ROOT::RDF::TProfile1DModel adc_model(
+        "adc sum vs layer",
+        "adc sum vs layer;layer;adc sum",
+        max_layer + 1, 0, max_layer + 1
+    );
+    profiles.emplace_back(df4.Profile1D<float>(adc_model, "layer_vec", "adc_vec"));
 
     for (const auto& [layer, modules] : layer_map) {
 
         std::string h_row_vs_column_name = Form("row vs column Layer %d", layer);
+        std::string h_x_name = Form("x Layer %d", layer);
+        std::string h_y_name = Form("y Layer %d", layer);
 
         std::string select_row = Form("row[(layer == %d)]", layer);
         std::string select_column = Form("column[(layer == %d)]", layer);
+        std::string select_x = Form("x[(layer == %d) && is_vertical]", layer);
+        std::string select_y = Form("y[(layer == %d) && (is_vertical == false)]", layer);
 
-        auto df_layer = df3.Define("row_layer", select_row).Define("column_layer", select_column);
+        if (layer % 2 == 0) {
+            auto df_layer = df3.Define("row_layer", select_row).Define("column_layer", select_column).Define("x_vertical_layer", select_x);
+            histos_1d.emplace_back(df_layer.Histo1D<ROOT::RVec<double>>({h_x_name.c_str(), (h_x_name + std::string(";x [cm];Entries")).c_str(), 1000, x_min, x_max}, "x_vertical_layer"));
+            histos_2d.emplace_back(df_layer.Histo2D<ROOT::RVec<int>, ROOT::RVec<int>>({h_row_vs_column_name.c_str(), (h_row_vs_column_name + std::string(";column;row;Entries")).c_str(), max_column + 1, 0, static_cast<double>(max_column + 1), max_row + 1, 0, static_cast<double>(max_row + 1)}, "column_layer", "row_layer"));
 
-        histos_2d.emplace_back(df_layer.Histo2D<ROOT::RVec<int>, ROOT::RVec<int>>({h_row_vs_column_name.c_str(), (h_row_vs_column_name + std::string(";column;row;Entries")).c_str(), max_column + 1, 0, static_cast<double>(max_column + 1), max_row + 1, 0, static_cast<double>(max_row + 1)}, "column_layer", "row_layer"));
-
+        }
+        else {
+            auto df_layer = df3.Define("row_layer", select_row).Define("column_layer", select_column).Define("y_not_vertical_layer", select_y);
+            histos_1d.emplace_back(df_layer.Histo1D<ROOT::RVec<double>>({h_y_name.c_str(), (h_y_name + std::string(";y [cm];Entries")).c_str(), 1000, y_min, y_max}, "y_not_vertical_layer"));
+            histos_2d.emplace_back(df_layer.Histo2D<ROOT::RVec<int>, ROOT::RVec<int>>({h_row_vs_column_name.c_str(), (h_row_vs_column_name + std::string(";column;row;Entries")).c_str(), max_column + 1, 0, static_cast<double>(max_column + 1), max_row + 1, 0, static_cast<double>(max_row + 1)}, "column_layer", "row_layer"));
+        }
+       
         for (const auto& [row, col] : modules) {
 
             std::string h_adc_name = Form("adc Layer %d Row %d Column %d", layer, row, col);
