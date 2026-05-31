@@ -20,17 +20,19 @@
 #include "SiStripIOHeaders.h"
 #include "SiStripRawToDigi.h"
 #include "SiStripDigiClustering.h"
-#include "SiStripDigiFilter.h"
 #include "SiStripDetInfo.h"
 #include "SiStripPosition.h"
 #include "SiStripHardwareConstants.h"
 
-template <typename Ret, typename Method>
+template <typename T, typename Ret, typename Method>
 auto ExtractRVec(Method method)
 {
-    return [method](const std::vector<SiStripDigi>& digis) {
-        ROOT::RVec<Ret> out(digis.size());
-        std::transform(digis.begin(), digis.end(), std::back_inserter(out), [&](const auto& d){ return (d.*method)(); });
+    return [method](const std::vector<T>& v) {
+        ROOT::RVec<Ret> out;
+        out.reserve(v.size());
+        for (const auto& obj : v) {
+            out.emplace_back((obj.*method)());
+        }
         return out;
     };
 }
@@ -56,80 +58,31 @@ int main(int argc, char* argv[]){
     auto df = ROOT::RDataFrame("Events", input_root_file);
     // Perform digitization + clustering
     auto df2 = df.Define("FedChannelDigis_not_clustered", SiStripRawToDigi(detector_info_path), {"FEDRawDataCollection_rawDataCollector__LHC."})
-        .Define("FedChannelDigis", SiStripDigiFilter(), {"FedChannelDigis_not_clustered"})
-        .Define("Cluster", SiStripDigiClustering(), {"FedChannelDigis_not_clustered"});
+        .Define("ClusteringProducts", SiStripDigiClustering(), {"FedChannelDigis_not_clustered"})
+        .Define("FedChannelDigis", [](const SiStripClusteringProducts& p) { return p.digis; }, {"ClusteringProducts"})
+        .Define("Cluster", [](const SiStripClusteringProducts& p) { return p.clusters; }, {"ClusteringProducts"});
     // Prepare columns for histos
-    auto df3 = df2.Define("adc", ExtractRVec<uint16_t>(&SiStripDigi::GetSignal), {"FedChannelDigis"})
-        .Define( "strip", ExtractRVec<uint16_t>(&SiStripDigi::GetStrip), {"FedChannelDigis"})
-        .Define( "fed_key", ExtractRVec<uint32_t>(&SiStripDigi::GetFedKey), {"FedChannelDigis"})
-        .Define( "layer", ExtractRVec<int>(&SiStripDigi::GetLayer), {"FedChannelDigis"})
-        .Define( "row", ExtractRVec<int>(&SiStripDigi::GetRow), {"FedChannelDigis"})
-        .Define( "column", ExtractRVec<int>(&SiStripDigi::GetColumn), {"FedChannelDigis"})
-        .Define( "detector_id", ExtractRVec<uint32_t>(&SiStripDigi::GetDetectorId), {"FedChannelDigis"})
-        .Define( "is_vertical", ExtractRVec<bool>(&SiStripDigi::IsVertical), {"FedChannelDigis"})
-        .Define( "position", [](const ROOT::VecOps::RVec<uint32_t>& detids) {return ROOT::VecOps::Map(detids, GetSiStripPosition);}, {"detector_id"})
-        .Define( "x", [](const ROOT::VecOps::RVec<ROOT::Math::XYZPoint>& points) {return ROOT::VecOps::Map(points, [](const auto& p) { return p.X(); });}, {"position"})
-        .Define( "y", [](const ROOT::VecOps::RVec<ROOT::Math::XYZPoint>& points) {return ROOT::VecOps::Map(points, [](const auto& p) { return p.Y(); });}, {"position"})
-        .Define( "z", [](const ROOT::VecOps::RVec<ROOT::Math::XYZPoint>& points) {return ROOT::VecOps::Map(points, [](const auto& p) { return p.Z(); });}, {"position"})
-        .Define( "x_vertical", "x[is_vertical]")
-        .Define( "y_not_vertical", "y[is_vertical == false]")
-        .Define( "z_vertical", "z[is_vertical]")
-        .Define( "z_not_vertical", "z[is_vertical == false]")
-        .Define("cluster_adc",
-            [](const std::vector<SiStripCluster>& c) {
-                ROOT::RVec<uint32_t> out;
-                out.reserve(c.size());
-
-                for (const auto& cl : c)
-                    out.push_back(cl.adc_);
-
-                return out;
-            },
-            {"Cluster"})
-        .Define("cluster_size",
-            [](const std::vector<SiStripCluster>& c) {
-                ROOT::RVec<size_t> out;
-                out.reserve(c.size());
-
-                for (const auto& cl : c)
-                    out.push_back(cl.size_);
-
-                return out;
-            },
-            {"Cluster"})
-        .Define("cluster_layer",
-            [](const std::vector<SiStripCluster>& c) {
-                ROOT::RVec<int> out;
-                out.reserve(c.size());
-
-                for (const auto& cl : c)
-                    out.push_back(cl.layer_);
-
-                return out;
-            },
-            {"Cluster"})
-        .Define("cluster_row",
-            [](const std::vector<SiStripCluster>& c) {
-                ROOT::RVec<int> out;
-                out.reserve(c.size());
-
-                for (const auto& cl : c)
-                    out.push_back(cl.row_);
-
-                return out;
-            },
-            {"Cluster"})
-        .Define("cluster_column",
-            [](const std::vector<SiStripCluster>& c) {
-                ROOT::RVec<int> out;
-                out.reserve(c.size());
-
-                for (const auto& cl : c)
-                    out.push_back(cl.column_);
-
-                return out;
-            },
-            {"Cluster"});
+    auto df3 = df2.Define("adc", ExtractRVec<SiStripDigi, uint16_t>(&SiStripDigi::GetSignal), {"FedChannelDigis"})
+        .Define("strip", ExtractRVec<SiStripDigi, uint16_t>(&SiStripDigi::GetStrip), {"FedChannelDigis"})
+        .Define("fed_key", ExtractRVec<SiStripDigi, uint32_t>(&SiStripDigi::GetFedKey), {"FedChannelDigis"})
+        .Define("layer", ExtractRVec<SiStripDigi, int>(&SiStripDigi::GetLayer), {"FedChannelDigis"})
+        .Define("row", ExtractRVec<SiStripDigi, int>(&SiStripDigi::GetRow), {"FedChannelDigis"})
+        .Define("column", ExtractRVec<SiStripDigi, int>(&SiStripDigi::GetColumn), {"FedChannelDigis"})
+        .Define("detector_id", ExtractRVec<SiStripDigi, uint32_t>(&SiStripDigi::GetDetectorId), {"FedChannelDigis"})
+        .Define("is_vertical", ExtractRVec<SiStripDigi, bool>(&SiStripDigi::IsVertical), {"FedChannelDigis"})
+        .Define("position", [](const ROOT::VecOps::RVec<uint32_t>& detids) {return ROOT::VecOps::Map(detids, GetSiStripPosition);}, {"detector_id"})
+        .Define("x", [](const ROOT::VecOps::RVec<ROOT::Math::XYZPoint>& points) {return ROOT::VecOps::Map(points, [](const auto& p) { return p.X(); });}, {"position"})
+        .Define("y", [](const ROOT::VecOps::RVec<ROOT::Math::XYZPoint>& points) {return ROOT::VecOps::Map(points, [](const auto& p) { return p.Y(); });}, {"position"})
+        .Define("z", [](const ROOT::VecOps::RVec<ROOT::Math::XYZPoint>& points) {return ROOT::VecOps::Map(points, [](const auto& p) { return p.Z(); });}, {"position"})
+        .Define("x_vertical", "x[is_vertical]")
+        .Define("y_not_vertical", "y[is_vertical == false]")
+        .Define("z_vertical", "z[is_vertical]")
+        .Define("z_not_vertical", "z[is_vertical == false]")
+        .Define("cluster_adc", ExtractRVec<SiStripCluster, uint32_t>(&SiStripCluster::GetSignal), {"Cluster"})
+        .Define("cluster_size", ExtractRVec<SiStripCluster, size_t>(&SiStripCluster::GetSize), {"Cluster"})
+        .Define("cluster_layer", ExtractRVec<SiStripCluster, int>(&SiStripCluster::GetLayer), {"Cluster"})
+        .Define("cluster_row", ExtractRVec<SiStripCluster, int>(&SiStripCluster::GetRow), {"Cluster"})
+        .Define("cluster_column", ExtractRVec<SiStripCluster, int>(&SiStripCluster::GetColumn), {"Cluster"});
 
     // Retrieve detinfo values to generate histograms dynamically
     const std::vector<DetectorInfo> detinfo = GetDetectorInfo(detector_info_path);
@@ -178,7 +131,6 @@ int main(int argc, char* argv[]){
     histos_1d.emplace_back(df3.Histo1D<ROOT::RVec<uint32_t>>({"det_id (advsndsw)", "det_id (advsndsw);det_id;Entries", 18000, 0, 180000}, "detector_id"));
     histos_2d.emplace_back(df4.Histo2D<ROOT::RVec<int>, ROOT::RVec<float>>({"saturated percentage (adc > 253) vs layer", "saturated percentage (adc > 253) vs layer;layer;saturated %", max_layer + 1, 0, static_cast<double>(max_layer + 1), 101, 0, 101}, "layer_vec", "saturated_percentage_vec"));
     histos_2d.emplace_back(df4.Histo2D<ROOT::RVec<int>, ROOT::RVec<uint32_t>>({"adc sum vs layer", "adc sum vs layer;layer;adc sum", max_layer + 1, 0, static_cast<double>(max_layer + 1), 1000, 0, 30000}, "layer_vec", "adc_vec"));
-    histos_2d.emplace_back(df4.Histo2D<ROOT::RVec<double>, ROOT::RVec<double>>({"x vs z", "x vs z;z [cm];x [cm]", 1000, z_min, z_max, 1000, x_min, x_max}, "z_vertical", "x_vertical"));
 
     histos_1d.emplace_back(df3.Histo1D<ROOT::RVec<double>>({"x", "x;x [cm];Entries", 1000, x_min, x_max}, "x_vertical"));
     histos_1d.emplace_back(df3.Histo1D<ROOT::RVec<double>>({"y", "y;y [cm];Entries", 1000, y_min, y_max}, "y_not_vertical"));
@@ -199,6 +151,8 @@ int main(int argc, char* argv[]){
         max_layer + 1, 0, max_layer + 1
     );
     profiles.emplace_back(df4.Profile1D<float>(adc_model, "layer_vec", "adc_vec"));
+
+    auto compute_saturated_percentage = [](const ROOT::RVec<uint16_t>& adc) {return adc.empty() ? 0.f : 100.f * adc[adc > 253].size() / adc.size();};
 
     for (const auto& [layer, modules] : layer_map) {
 
@@ -236,11 +190,10 @@ int main(int argc, char* argv[]){
 
             std::string select_adc = Form("adc[(layer == %d) && (row == %d) && (column == %d)]", layer, row, col);
             std::string select_strip = Form("strip[(layer == %d) && (row == %d) && (column == %d)]", layer, row, col);
-            std::string compute_saturated_percentage = Form("adc_module.empty() ? 0.f : 100.f * adc_module[adc_module > 253].size() / adc_module.size()");
             std::string select_cluster_adc = Form("cluster_adc[(cluster_layer == %d) && (cluster_row == %d) && (cluster_column == %d)]", layer, row, col);
             std::string select_cluster_size = Form("cluster_size[(cluster_layer == %d) && (cluster_row == %d) && (cluster_column == %d)]", layer, row, col);
 
-            auto df_module = df3.Define("adc_module", select_adc).Define("sistrip_module", select_strip).Define("nhits_module", "adc_module.size()").Define("saturated_percentage_module", compute_saturated_percentage)
+            auto df_module = df3.Define("adc_module", select_adc).Define("sistrip_module", select_strip).Define("nhits_module", "adc_module.size()").Define("saturated_percentage_module", compute_saturated_percentage, {"adc_module"})
                 .Define("cluster_adc_module", select_cluster_adc).Define("cluster_size_module", select_cluster_size);
 
             histos_1d.emplace_back(df_module.Histo1D<ROOT::RVec<uint16_t>>({h_adc_name.c_str(), (h_adc_name + std::string(";adc;Entries")).c_str(), 256, 0, 256}, "adc_module"));

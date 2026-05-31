@@ -10,12 +10,15 @@
 class SiStripDigiClustering {
     public:
         SiStripDigiClustering() { ; }
-        std::vector<SiStripCluster> operator()(const std::vector<SiStripDigi>& input_digis) const;
+        SiStripClusteringProducts operator()(const std::vector<SiStripDigi>& input_digis) const;
 };
 
-std::vector<SiStripCluster> SiStripDigiClustering::operator()(const std::vector<SiStripDigi>& input_digis) const
+SiStripClusteringProducts SiStripDigiClustering::operator()(const std::vector<SiStripDigi>& input_digis) const
 {
     std::map<Module, std::vector<SiStripDigi>> grouped;
+    std::vector<SiStripCluster> clusters;
+    std::vector<SiStripDigi> clustered_output;
+    clustered_output.reserve(input_digis.size());
 
     // Group by module
     for (const auto& d : input_digis)
@@ -23,17 +26,15 @@ std::vector<SiStripCluster> SiStripDigiClustering::operator()(const std::vector<
         grouped[{d.GetLayer(), d.GetRow(), d.GetColumn()}].push_back(d);
     }
 
-    std::vector<SiStripCluster> clusters;
-
-    constexpr uint16_t seed_thr  = 3.0f * SISTRIP_NOISE_ADC;
-    constexpr uint16_t neigh_thr = 2.0f * SISTRIP_NOISE_ADC;
+    constexpr uint16_t seed_thr  = 3 * SISTRIP_NOISE_ADC;
+    constexpr uint16_t neigh_thr = 2 * SISTRIP_NOISE_ADC;
     constexpr uint16_t cluster_cut_factor = SISTRIP_NOISE_ADC * SISTRIP_NOISE_ADC;
 
     // Cluster each module independently
-    for (auto& [key, digis] : grouped)
+    for (auto& [mod, digis] : grouped)
     {
         std::sort(digis.begin(), digis.end(), [](const SiStripDigi& a, const SiStripDigi& b) { return a.GetStrip() < b.GetStrip();});
-        std::vector<bool> used(digis.size(), false);
+        std::vector<uint8_t> used(digis.size(), 0);
 
         for (size_t i = 0; i < digis.size(); ++i)
         {
@@ -45,11 +46,11 @@ std::vector<SiStripCluster> SiStripDigiClustering::operator()(const std::vector<
                 continue;
 
             std::vector<size_t> cluster;
-            uint16_t sum_signal = 0.0f;
+            uint32_t sum_signal{0};
 
             // start cluster
             cluster.push_back(i);
-            used[i] = true;
+            used[i] = 1;
             sum_signal += seed.GetSignal();
 
             int last_strip = seed.GetStrip();
@@ -68,7 +69,7 @@ std::vector<SiStripCluster> SiStripDigiClustering::operator()(const std::vector<
                     break;
 
                 cluster.push_back(j);
-                used[j] = true;
+                used[j] = 1;
                 sum_signal += d.GetSignal();
                 last_strip = d.GetStrip();
             }
@@ -89,31 +90,29 @@ std::vector<SiStripCluster> SiStripDigiClustering::operator()(const std::vector<
                     break;
 
                 cluster.push_back(j);
-                used[j] = true;
+                used[j] = 1;
                 sum_signal += d.GetSignal();
                 last_strip = d.GetStrip();
             }
 
-            uint16_t threshold = cluster.size() * cluster_cut_factor;
+            uint32_t threshold = static_cast<uint32_t>(cluster.size()) * cluster_cut_factor;
 
             if (sum_signal > threshold)
             {   
-                uint32_t cluster_adc{0};
-                for (auto idx : cluster)
-                    cluster_adc += digis[idx].GetSignal();
-                clusters.emplace_back(SiStripCluster{cluster_adc, cluster.size(), digis.front().GetLayer(), digis.front().GetRow(), digis.front().GetColumn()});
-
+                for (auto idx : cluster) {
+                    clustered_output.push_back(digis[idx]);
+                }
+                clusters.emplace_back(sum_signal, cluster.size(), mod.layer, mod.row, mod.col);
             }
             else
             {
                 // reject cluster → free digis
                 for (auto idx : cluster)
-                    used[idx] = false;
+                    used[idx] = 0;
             }
         }
     }
-
-    return clusters;
+    return {std::move(clustered_output), std::move(clusters)};
 }
 
 #endif
