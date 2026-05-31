@@ -30,8 +30,7 @@ auto ExtractRVec(Method method)
 {
     return [method](const std::vector<SiStripDigi>& digis) {
         ROOT::RVec<Ret> out(digis.size());
-        for (size_t i = 0; i < digis.size(); ++i)
-            out[i] = (digis[i].*method)();
+        std::transform(digis.begin(), digis.end(), std::back_inserter(out), [&](const auto& d){ return (d.*method)(); });
         return out;
     };
 }
