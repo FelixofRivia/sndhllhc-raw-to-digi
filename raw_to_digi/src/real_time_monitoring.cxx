@@ -58,19 +58,19 @@ int main(int argc, char* argv[]){
 
     auto df = ROOT::RDataFrame("Events", input_root_file);
     // Perform digitization + clustering
-    auto df2 = df.Define("FedChannelDigis_not_clustered", SiStripRawToDigi(detector_info_path), {"FEDRawDataCollection_rawDataCollector__LHC."})
-        .Define("ClusteringProducts", SiStripDigiClustering(), {"FedChannelDigis_not_clustered"})
-        .Define("FedChannelDigis", [](const SiStripClusteringProducts& p) { return p.digis; }, {"ClusteringProducts"})
+    //df.Define("FedChannelDigis", SiStripRawToDigi(detector_info_path), {"FEDRawDataCollection_rawDataCollector__LHC."})
+    auto df2 = df.Define("ClusteringProducts", SiStripDigiClustering(), {"FedChannelDigis"})
+        .Define("FedChannelDigis_Clust", [](const SiStripClusteringProducts& p) { return p.digis; }, {"ClusteringProducts"})
         .Define("Cluster", [](const SiStripClusteringProducts& p) { return p.clusters; }, {"ClusteringProducts"});
     // Prepare columns for histos
-    auto df3 = df2.Define("adc", ExtractRVec<SiStripDigi, uint16_t>(&SiStripDigi::GetSignal), {"FedChannelDigis"})
-        .Define("strip", ExtractRVec<SiStripDigi, uint16_t>(&SiStripDigi::GetStrip), {"FedChannelDigis"})
-        .Define("fed_key", ExtractRVec<SiStripDigi, uint32_t>(&SiStripDigi::GetFedKey), {"FedChannelDigis"})
-        .Define("layer", ExtractRVec<SiStripDigi, int>(&SiStripDigi::GetLayer), {"FedChannelDigis"})
-        .Define("row", ExtractRVec<SiStripDigi, int>(&SiStripDigi::GetRow), {"FedChannelDigis"})
-        .Define("column", ExtractRVec<SiStripDigi, int>(&SiStripDigi::GetColumn), {"FedChannelDigis"})
-        .Define("detector_id", ExtractRVec<SiStripDigi, uint32_t>(&SiStripDigi::GetDetectorId), {"FedChannelDigis"})
-        .Define("is_vertical", ExtractRVec<SiStripDigi, bool>(&SiStripDigi::IsVertical), {"FedChannelDigis"})
+    auto df3 = df2.Define("adc", ExtractRVec<SiStripDigi, uint16_t>(&SiStripDigi::GetSignal), {"FedChannelDigis_Clust"})
+        .Define("strip", ExtractRVec<SiStripDigi, uint16_t>(&SiStripDigi::GetStrip), {"FedChannelDigis_Clust"})
+        .Define("fed_key", ExtractRVec<SiStripDigi, uint32_t>(&SiStripDigi::GetFedKey), {"FedChannelDigis_Clust"})
+        .Define("layer", ExtractRVec<SiStripDigi, int>(&SiStripDigi::GetLayer), {"FedChannelDigis_Clust"})
+        .Define("row", ExtractRVec<SiStripDigi, int>(&SiStripDigi::GetRow), {"FedChannelDigis_Clust"})
+        .Define("column", ExtractRVec<SiStripDigi, int>(&SiStripDigi::GetColumn), {"FedChannelDigis_Clust"})
+        .Define("detector_id", ExtractRVec<SiStripDigi, uint32_t>(&SiStripDigi::GetDetectorId), {"FedChannelDigis_Clust"})
+        .Define("is_vertical", ExtractRVec<SiStripDigi, bool>(&SiStripDigi::IsVertical), {"FedChannelDigis_Clust"})
         .Define("position", [](const ROOT::VecOps::RVec<uint32_t>& detids) {return ROOT::VecOps::Map(detids, GetSiStripPosition);}, {"detector_id"})
         .Define("x", [](const ROOT::VecOps::RVec<ROOT::Math::XYZPoint>& points) {return ROOT::VecOps::Map(points, [](const auto& p) { return p.X(); });}, {"position"})
         .Define("y", [](const ROOT::VecOps::RVec<ROOT::Math::XYZPoint>& points) {return ROOT::VecOps::Map(points, [](const auto& p) { return p.Y(); });}, {"position"})
@@ -173,7 +173,6 @@ int main(int argc, char* argv[]){
             auto df_layer = df3.Define("row_layer", select_row).Define("column_layer", select_column).Define("x_vertical_layer", select_x);
             histos_1d[layer].emplace_back(df_layer.Histo1D<ROOT::RVec<double>>({h_x_name.c_str(), (h_x_name + std::string(";x [cm];Entries")).c_str(), 1000, x_min, x_max}, "x_vertical_layer"));
             histos_2d[layer].emplace_back(df_layer.Histo2D<ROOT::RVec<int>, ROOT::RVec<int>>({h_row_vs_column_name.c_str(), (h_row_vs_column_name + std::string(";column;row;Entries")).c_str(), max_column + 1, 0, static_cast<double>(max_column + 1), max_row + 1, 0, static_cast<double>(max_row + 1)}, "column_layer", "row_layer"));
-
         }
         else {
             auto df_layer = df3.Define("row_layer", select_row).Define("column_layer", select_column).Define("y_not_vertical_layer", select_y);

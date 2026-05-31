@@ -22,6 +22,8 @@ int main(int argc, char* argv[]){
     std::transform(output_format.begin(), output_format.end(), output_format.begin(), [](unsigned char c) {return std::tolower(c);});
 
     ROOT::RDF::RSnapshotOptions opts;
+    opts.fCompressionAlgorithm = ROOT::RCompressionSetting::EAlgorithm::EValues::kZSTD;
+    opts.fCompressionLevel = 5;
     if (output_format == "rntuple") {
         opts.fOutputFormat = ROOT::RDF::ESnapshotOutputFormat::kRNTuple;
         std::cout << "Using RNTuple output format\n";

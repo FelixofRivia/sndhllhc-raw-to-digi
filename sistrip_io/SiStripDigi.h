@@ -8,6 +8,7 @@ class SiStripDigi {
 public:
   SiStripDigi(uint16_t strip, uint16_t adc, uint32_t fed_key, uint32_t time, const DetectorInfo& detinfo);
   SiStripDigi() : detector_id_(0), fed_key_(0), time_(0), adc_(0), is_valid_(false) {}
+  ~SiStripDigi() = default;
 
   inline uint32_t GetFedKey() const { return fed_key_; }
   inline uint32_t GetDetectorId() const { return detector_id_; }
@@ -19,6 +20,8 @@ public:
   inline uint16_t GetSignal() const { return adc_; }
   inline bool IsVertical() const { return GetLayer() % 2 == 0; };
   inline bool IsValid() const { return is_valid_; }
+
+  ClassDef(SiStripDigi, 1);
 
 private:
   uint32_t detector_id_;
