@@ -47,8 +47,11 @@ int main(int argc, char* argv[]){
     std::string output_root_file(argv[4]);
 
     ROOT::EnableImplicitMT(std::stoi(argv[5]));
+    std::cout << "Requested threads: " << std::stoi(argv[5]) << '\n';
+    std::cout << "ROOT pool size:    " << ROOT::GetThreadPoolSize() << '\n';
 
-    gGeoManager->Import(geometry_file.c_str());
+    TGeoManager::Import(geometry_file.c_str());
+    gGeoManager->SetMaxThreads(ROOT::GetThreadPoolSize());
 
     auto df = ROOT::RDataFrame("Events", input_root_file);
     // Perform digitization + clustering
@@ -238,6 +241,7 @@ int main(int argc, char* argv[]){
             std::string h_adc_vs_strip_name = Form("adc vs strip Layer %d Row %d Column %d", layer, row, col);
             std::string h_cluster_adc_name = Form("cluster adc Layer %d Row %d Column %d", layer, row, col);
             std::string h_cluster_size_name = Form("cluster size Layer %d Row %d Column %d", layer, row, col);
+            std::string h_cluster_adc_vs_size_name = Form("cluster adc vs size Layer %d Row %d Column %d", layer, row, col);
 
             std::string select_adc = Form("adc[(layer == %d) && (row == %d) && (column == %d)]", layer, row, col);
             std::string select_strip = Form("strip[(layer == %d) && (row == %d) && (column == %d)]", layer, row, col);
@@ -255,6 +259,7 @@ int main(int argc, char* argv[]){
             histos_1d.emplace_back(df_module.Histo1D<ROOT::RVec<size_t>>({h_cluster_size_name.c_str(), (h_cluster_size_name + std::string(";size;Entries")).c_str(), 100, 0, 100}, "cluster_size_module"));
             histos_1d.emplace_back(df_module.Histo1D<float>({h_saturated_percentage_name.c_str(), (h_saturated_percentage_name + std::string(";saturated %;Entries")).c_str(), 101, 0, 101}, "saturated_percentage_module"));
             histos_2d.emplace_back(df_module.Histo2D<ROOT::RVec<uint16_t>, ROOT::RVec<uint16_t>>({h_adc_vs_strip_name.c_str(), (h_adc_vs_strip_name + std::string(";strip;adc;Entries")).c_str(), 756, 0, 756, 256, 0, 256}, "sistrip_module", "adc_module"));
+            histos_2d.emplace_back(df_module.Histo2D<ROOT::RVec<size_t>, ROOT::RVec<uint32_t>>({h_cluster_adc_vs_size_name.c_str(), (h_cluster_adc_vs_size_name + std::string(";size;adc;Entries")).c_str(), 100, 0, 100, 3000, 0, 3000}, "cluster_size_module", "cluster_adc_module"));
         }
     }
 
