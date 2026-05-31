@@ -23,6 +23,7 @@
 #include "SiStripDigiFilter.h"
 #include "SiStripDetInfo.h"
 #include "SiStripPosition.h"
+#include "SiStripHardwareConstants.h"
 
 template <typename Ret, typename Method>
 auto ExtractRVec(Method method)
@@ -244,12 +245,12 @@ int main(int argc, char* argv[]){
                 .Define("cluster_adc_module", select_cluster_adc).Define("cluster_size_module", select_cluster_size);
 
             histos_1d.emplace_back(df_module.Histo1D<ROOT::RVec<uint16_t>>({h_adc_name.c_str(), (h_adc_name + std::string(";adc;Entries")).c_str(), 256, 0, 256}, "adc_module"));
-            histos_1d.emplace_back(df_module.Histo1D<ROOT::RVec<uint16_t>>({h_strip_name.c_str(), (h_strip_name + std::string(";strip;Entries")).c_str(), 756, 0, 756}, "sistrip_module"));
-            histos_1d.emplace_back(df_module.Histo1D<std::size_t>({h_nhits_name.c_str(), (h_nhits_name + std::string(";nhits;Entries")).c_str(), 756, 0, 756}, "nhits_module"));
+            histos_1d.emplace_back(df_module.Histo1D<ROOT::RVec<uint16_t>>({h_strip_name.c_str(), (h_strip_name + std::string(";strip;Entries")).c_str(), MAX_SISTRIPS_PER_MODULE, 0, static_cast<double>(MAX_SISTRIPS_PER_MODULE)}, "sistrip_module"));
+            histos_1d.emplace_back(df_module.Histo1D<std::size_t>({h_nhits_name.c_str(), (h_nhits_name + std::string(";nhits;Entries")).c_str(), MAX_SISTRIPS_PER_MODULE, 0, static_cast<double>(MAX_SISTRIPS_PER_MODULE)}, "nhits_module"));
             histos_1d.emplace_back(df_module.Histo1D<ROOT::RVec<uint32_t>>({h_cluster_adc_name.c_str(), (h_cluster_adc_name + std::string(";adc;Entries")).c_str(), 3000, 0, 3000}, "cluster_adc_module"));
             histos_1d.emplace_back(df_module.Histo1D<ROOT::RVec<size_t>>({h_cluster_size_name.c_str(), (h_cluster_size_name + std::string(";size;Entries")).c_str(), 100, 0, 100}, "cluster_size_module"));
             histos_1d.emplace_back(df_module.Histo1D<float>({h_saturated_percentage_name.c_str(), (h_saturated_percentage_name + std::string(";saturated %;Entries")).c_str(), 101, 0, 101}, "saturated_percentage_module"));
-            histos_2d.emplace_back(df_module.Histo2D<ROOT::RVec<uint16_t>, ROOT::RVec<uint16_t>>({h_adc_vs_strip_name.c_str(), (h_adc_vs_strip_name + std::string(";strip;adc;Entries")).c_str(), 756, 0, 756, 256, 0, 256}, "sistrip_module", "adc_module"));
+            histos_2d.emplace_back(df_module.Histo2D<ROOT::RVec<uint16_t>, ROOT::RVec<uint16_t>>({h_adc_vs_strip_name.c_str(), (h_adc_vs_strip_name + std::string(";strip;adc;Entries")).c_str(),  MAX_SISTRIPS_PER_MODULE, 0, static_cast<double>(MAX_SISTRIPS_PER_MODULE), 256, 0, 256}, "sistrip_module", "adc_module"));
             histos_2d.emplace_back(df_module.Histo2D<ROOT::RVec<size_t>, ROOT::RVec<uint32_t>>({h_cluster_adc_vs_size_name.c_str(), (h_cluster_adc_vs_size_name + std::string(";size;adc;Entries")).c_str(), 100, 0, 100, 3000, 0, 3000}, "cluster_size_module", "cluster_adc_module"));
         }
     }
