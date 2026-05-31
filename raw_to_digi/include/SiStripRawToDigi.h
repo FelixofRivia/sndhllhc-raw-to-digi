@@ -91,8 +91,10 @@ std::vector<SiStripDigi> SiStripRawToDigi::operator()(const edm::Wrapper<FEDRawD
                 // The strip id in a module ranges 0 - 756, depending on the APV
                 const uint16_t module_strip_id = SISTRIPS_PER_APV_PAIR * GetApvPair(detector_info) + (stripStart + firstStrip + inCluster);
 
+                if (!((module_strip_id % 128) <= 5 || (module_strip_id % 128) >= 123)) digis.emplace_back(SiStripDigi(module_strip_id, getADC_W<num_words>(data, offset, bits_shift), fed_key, 0, detector_info));
+
                 // For the moment set time to 0
-                digis.emplace_back(SiStripDigi(module_strip_id, getADC_W<num_words>(data, offset, bits_shift), fed_key, 0, detector_info));
+                
                 offset += num_words;
                 ++inCluster;
             }

@@ -131,15 +131,6 @@ int main(int argc, char* argv[]){
             },
             {"Cluster"});
 
-    // //If RHist is available
-    // #if USE_ROOT7_RHIST
-    // auto rhist_adc = df3.Hist(512, {0, 512}, "adc");
-    // auto histo_adc = ROOT::Experimental::Hist::ConvertToTH1D(*rhist_adc);
-    // // If RHist is not available
-    // #else
-    // auto histo_adc = df3.Histo1D<ROOT::RVec<uint16_t>>({"SiStrip adc", "SiStrip adc", 512, 0, 512}, "adc");
-    // #endif
-
     // Retrieve detinfo values to generate histograms dynamically
     const std::vector<DetectorInfo> detinfo = GetDetectorInfo(detector_info_path);
     const int max_row = std::max_element(detinfo.begin(), detinfo.end(), [](const DetectorInfo& x, const DetectorInfo& y) {return x.row < y.row;})->row;
