@@ -29,29 +29,39 @@ def create_status_table(directories):
         n_jsn = len(jsn_files)
 
         # Corresponding files
-        converted_file = (directories["converted"] / run_name / f"{run_name}_converted.root")
-
+        converted_file = directories["converted"] / run_name / f"{run_name}_converted.root"
+        digi_file = directories["converted"] / run_name / f"{run_name}_digi_rntuple.root"
         dqm_file = directories["histos"] / f"{run_name}_dqm.root"
 
         # Existence checks
         converted_exists = converted_file.exists()
+        digi_exists = digi_file.exists()
         dqm_exists = dqm_file.exists()
 
         # Timestamp comparison
         converted_mtime = file_modified_time(converted_file)
+        digi_mtime = file_modified_time(digi_file)
         dqm_mtime = file_modified_time(dqm_file)
 
+        converted_up_to_date = (n_raw == n_jsn)
+        digi_up_to_date = False
         dqm_up_to_date = False
 
-        if converted_exists and dqm_exists:
-            dqm_up_to_date = dqm_mtime >= converted_mtime
+        if converted_exists and digi_exists:
+            digi_up_to_date = digi_mtime >= converted_mtime
+
+        if converted_exists and digi_exists and dqm_exists:
+            dqm_up_to_date = (dqm_mtime >= converted_mtime and dqm_mtime >= digi_mtime)
 
         rows.append({
             "run": run_number,
             "n_raw": n_raw,
             "n_jsn": n_jsn,
             "converted_modified_time": converted_mtime,
+            "digi_modified_time": digi_mtime,
             "dqm_modified_time": dqm_mtime,
+            "converted_up_to_date": converted_up_to_date,
+            "digi_up_to_date": digi_up_to_date,
             "dqm_up_to_date": dqm_up_to_date,
         })
     
@@ -68,16 +78,11 @@ def select_run(df):
         logging.error("Found invalid run with n_raw < n_jsn")
         logging.error("\n%s", invalid[["run", "n_raw", "n_jsn"]].to_string(index=False))
 
-    # Candidate rows:
-    #   - n_raw > n_jsn (needs conversion + dqm)
-    #   - n_raw == n_jsn and dqm_up_to_date is False (needs dqm only)
-    candidates = df[(df["n_raw"] > df["n_jsn"]) | ((df["n_raw"] == df["n_jsn"]) & (~df["dqm_up_to_date"]))]
+    candidates = df[(~df["converted_up_to_date"]) | (~df["digi_up_to_date"]) | (~df["dqm_up_to_date"])]
 
+    if candidates.empty:
+        return None
+    
     # Select earliest candidate
-    selected_run = (
-        int(candidates["run"].min())
-        if not candidates.empty
-        else None
-    )
-
-    return selected_run
+    selected_row = candidates.loc[candidates["run"].idxmin()]
+    return selected_row.to_dict()

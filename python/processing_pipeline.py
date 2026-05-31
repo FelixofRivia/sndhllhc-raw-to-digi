@@ -5,6 +5,7 @@ import time
 
 from libs.processing_status import select_run, create_status_table
 from libs.run_conversion import run_conversion
+from libs.run_digitization import run_digitization
 from libs.run_dqm import run_dqm
 
 def main():
@@ -43,9 +44,18 @@ def main():
             selected_run = select_run(df)
 
             if selected_run is not None:
-                logging.info("Selected run: %s", selected_run)
-                run_conversion(directories, selected_run)
-                run_dqm(directories, selected_run)
+                logging.info("Selected run: %s", selected_run["run"])
+                if not selected_run["converted_up_to_date"]:
+                    run_conversion(directories, selected_run["run"])
+                    run_digitization(directories, selected_run["run"])
+                    run_dqm(directories, selected_run["run"])
+                elif not selected_run["digi_up_to_date"]:
+                    run_digitization(directories, selected_run["run"])
+                    run_dqm(directories, selected_run["run"])
+                elif not selected_run["dqm_up_to_date"]:
+                    run_dqm(directories, selected_run["run"])
+                else:
+                    logging.error("Run selected incorrectly")
 
             else:
                 logging.info("Everything is up to date")
