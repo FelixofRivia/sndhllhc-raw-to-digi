@@ -44,16 +44,17 @@ def main():
             selected_run = select_run(df)
 
             if selected_run is not None:
-                logging.info("Selected run: %s", selected_run["run"])
+                run_number = int(selected_run["run"])
+                logging.info("Selected run: %s", run_number)
                 if not selected_run["converted_up_to_date"]:
-                    run_conversion(directories, selected_run["run"])
-                    run_digitization(directories, selected_run["run"])
-                    run_dqm(directories, selected_run["run"])
+                    run_conversion(directories, run_number)
+                    run_digitization(directories, run_number)
+                    run_dqm(directories, run_number)
                 elif not selected_run["digi_up_to_date"]:
-                    run_digitization(directories, selected_run["run"])
-                    run_dqm(directories, selected_run["run"])
+                    run_digitization(directories, run_number)
+                    run_dqm(directories, run_number)
                 elif not selected_run["dqm_up_to_date"]:
-                    run_dqm(directories, selected_run["run"])
+                    run_dqm(directories, run_number)
                 else:
                     logging.error("Run selected incorrectly")
 
