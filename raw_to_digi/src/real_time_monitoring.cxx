@@ -83,7 +83,13 @@ int main(int argc, char* argv[]){
         .Define("cluster_size", ExtractRVec<SiStripCluster, size_t>(&SiStripCluster::GetSize), {"Cluster"})
         .Define("cluster_layer", ExtractRVec<SiStripCluster, int>(&SiStripCluster::GetLayer), {"Cluster"})
         .Define("cluster_row", ExtractRVec<SiStripCluster, int>(&SiStripCluster::GetRow), {"Cluster"})
-        .Define("cluster_column", ExtractRVec<SiStripCluster, int>(&SiStripCluster::GetColumn), {"Cluster"});
+        .Define("cluster_column", ExtractRVec<SiStripCluster, int>(&SiStripCluster::GetColumn), {"Cluster"})
+        .Define("cluster_detector_id", ExtractRVec<SiStripCluster, uint32_t>(&SiStripCluster::GetColumn), {"Cluster"})
+        .Define("cluster_is_vertical", ExtractRVec<SiStripCluster, bool>(&SiStripCluster::IsVertical), {"Cluster"})
+        .Define("cluster_position", [](const ROOT::VecOps::RVec<uint32_t>& detids) {return ROOT::VecOps::Map(detids, GetSiStripPosition);}, {"cluster_detector_id"})
+        .Define("cluster_x", [](const ROOT::VecOps::RVec<ROOT::Math::XYZPoint>& points) {return ROOT::VecOps::Map(points, [](const auto& p) { return p.X(); });}, {"cluster_position"})
+        .Define("cluster_y", [](const ROOT::VecOps::RVec<ROOT::Math::XYZPoint>& points) {return ROOT::VecOps::Map(points, [](const auto& p) { return p.Y(); });}, {"cluster_position"})
+        .Define("cluster_z", [](const ROOT::VecOps::RVec<ROOT::Math::XYZPoint>& points) {return ROOT::VecOps::Map(points, [](const auto& p) { return p.Z(); });}, {"cluster_position"});
 
     // Retrieve detinfo values to generate histograms dynamically
     const std::vector<DetectorInfo> detinfo = GetDetectorInfo(detector_info_path);
@@ -161,22 +167,31 @@ int main(int argc, char* argv[]){
     for (const auto& [layer, modules] : layer_map) {
 
         std::string h_row_vs_column_name = Form("row vs column Layer %d", layer);
-        std::string h_x_name = Form("x Layer %d", layer);
-        std::string h_y_name = Form("y Layer %d", layer);
+        
 
         std::string select_row = Form("row[(layer == %d)]", layer);
         std::string select_column = Form("column[(layer == %d)]", layer);
-        std::string select_x = Form("x[(layer == %d) && is_vertical]", layer);
-        std::string select_y = Form("y[(layer == %d) && (is_vertical == false)]", layer);
+        
+        
 
         if (layer % 2 == 0) {
-            auto df_layer = df3.Define("row_layer", select_row).Define("column_layer", select_column).Define("x_vertical_layer", select_x);
+            std::string h_x_name = Form("x Layer %d", layer);
+            std::string h_cluster_x_name = Form("cluster x Layer %d", layer);
+            std::string select_x = Form("x[(layer == %d) && is_vertical]", layer);
+            std::string select_cluster_x = Form("cluster_x[(cluster_layer == %d) && cluster_is_vertical]", layer);
+            auto df_layer = df3.Define("row_layer", select_row).Define("column_layer", select_column).Define("x_vertical_layer", select_x).Define("cluster_x_vertical_layer", select_cluster_x);
             histos_1d[layer].emplace_back(df_layer.Histo1D<ROOT::RVec<double>>({h_x_name.c_str(), (h_x_name + std::string(";x [cm];Entries")).c_str(), 1000, x_min, x_max}, "x_vertical_layer"));
+            histos_1d[layer].emplace_back(df_layer.Histo1D<ROOT::RVec<double>>({h_cluster_x_name.c_str(), (h_cluster_x_name + std::string(";x [cm];Entries")).c_str(), 1000, x_min, x_max}, "cluster_x_vertical_layer"));
             histos_2d[layer].emplace_back(df_layer.Histo2D<ROOT::RVec<int>, ROOT::RVec<int>>({h_row_vs_column_name.c_str(), (h_row_vs_column_name + std::string(";column;row;Entries")).c_str(), max_column + 1, 0, static_cast<double>(max_column + 1), max_row + 1, 0, static_cast<double>(max_row + 1)}, "column_layer", "row_layer"));
         }
         else {
-            auto df_layer = df3.Define("row_layer", select_row).Define("column_layer", select_column).Define("y_not_vertical_layer", select_y);
+            std::string h_y_name = Form("y Layer %d", layer);
+            std::string h_cluster_y_name = Form("cluster y Layer %d", layer);
+            std::string select_y = Form("y[(layer == %d) && (is_vertical == false)]", layer);
+            std::string select_cluster_y = Form("cluster_y[(cluster_layer == %d) && (cluster_is_vertical == false)]", layer);
+            auto df_layer = df3.Define("row_layer", select_row).Define("column_layer", select_column).Define("y_not_vertical_layer", select_y).Define("cluster_y_not_vertical_layer", select_cluster_y);
             histos_1d[layer].emplace_back(df_layer.Histo1D<ROOT::RVec<double>>({h_y_name.c_str(), (h_y_name + std::string(";y [cm];Entries")).c_str(), 1000, y_min, y_max}, "y_not_vertical_layer"));
+            histos_1d[layer].emplace_back(df_layer.Histo1D<ROOT::RVec<double>>({h_cluster_y_name.c_str(), (h_cluster_y_name + std::string(";y [cm];Entries")).c_str(), 1000, y_min, y_max}, "cluster_y_not_vertical_layer"));
             histos_2d[layer].emplace_back(df_layer.Histo2D<ROOT::RVec<int>, ROOT::RVec<int>>({h_row_vs_column_name.c_str(), (h_row_vs_column_name + std::string(";column;row;Entries")).c_str(), max_column + 1, 0, static_cast<double>(max_column + 1), max_row + 1, 0, static_cast<double>(max_row + 1)}, "column_layer", "row_layer"));
         }
        
@@ -189,6 +204,7 @@ int main(int argc, char* argv[]){
             std::string h_adc_vs_strip_name = Form("adc vs strip Layer %d Row %d Column %d", layer, row, col);
             std::string h_cluster_adc_name = Form("cluster adc Layer %d Row %d Column %d", layer, row, col);
             std::string h_cluster_size_name = Form("cluster size Layer %d Row %d Column %d", layer, row, col);
+            std::string h_n_clusters_name = Form("n clusters Layer %d Row %d Column %d", layer, row, col);
             std::string h_cluster_adc_vs_size_name = Form("cluster adc vs size Layer %d Row %d Column %d", layer, row, col);
 
             std::string select_adc = Form("adc[(layer == %d) && (row == %d) && (column == %d)]", layer, row, col);
@@ -197,16 +213,28 @@ int main(int argc, char* argv[]){
             std::string select_cluster_size = Form("cluster_size[(cluster_layer == %d) && (cluster_row == %d) && (cluster_column == %d)]", layer, row, col);
 
             auto df_module = df3.Define("adc_module", select_adc).Define("sistrip_module", select_strip).Define("nhits_module", "adc_module.size()").Define("saturated_percentage_module", compute_saturated_percentage, {"adc_module"})
-                .Define("cluster_adc_module", select_cluster_adc).Define("cluster_size_module", select_cluster_size);
+                .Define("cluster_adc_module", select_cluster_adc).Define("cluster_size_module", select_cluster_size).Define("n_clusters_module", "cluster_adc_module.size()");
 
             histos_1d[layer].emplace_back(df_module.Histo1D<ROOT::RVec<uint16_t>>({h_adc_name.c_str(), (h_adc_name + std::string(";adc;Entries")).c_str(), 256, 0, 256}, "adc_module"));
             histos_1d[layer].emplace_back(df_module.Histo1D<ROOT::RVec<uint16_t>>({h_strip_name.c_str(), (h_strip_name + std::string(";strip;Entries")).c_str(), MAX_SISTRIPS_PER_MODULE, 0, static_cast<double>(MAX_SISTRIPS_PER_MODULE)}, "sistrip_module"));
             histos_1d[layer].emplace_back(df_module.Histo1D<std::size_t>({h_nhits_name.c_str(), (h_nhits_name + std::string(";nhits;Entries")).c_str(), MAX_SISTRIPS_PER_MODULE, 0, static_cast<double>(MAX_SISTRIPS_PER_MODULE)}, "nhits_module"));
             histos_1d[layer].emplace_back(df_module.Histo1D<ROOT::RVec<uint32_t>>({h_cluster_adc_name.c_str(), (h_cluster_adc_name + std::string(";adc;Entries")).c_str(), 3000, 0, 3000}, "cluster_adc_module"));
             histos_1d[layer].emplace_back(df_module.Histo1D<ROOT::RVec<size_t>>({h_cluster_size_name.c_str(), (h_cluster_size_name + std::string(";size;Entries")).c_str(), 100, 0, 100}, "cluster_size_module"));
+            histos_1d[layer].emplace_back(df_module.Histo1D<std::size_t>({h_n_clusters_name.c_str(), (h_n_clusters_name + std::string(";n clusters;Entries")).c_str(), MAX_SISTRIPS_PER_MODULE / 8, 0, static_cast<double>(MAX_SISTRIPS_PER_MODULE / 8)}, "n_clusters_module"));
             histos_1d[layer].emplace_back(df_module.Histo1D<float>({h_saturated_percentage_name.c_str(), (h_saturated_percentage_name + std::string(";saturated %;Entries")).c_str(), 101, 0, 101}, "saturated_percentage_module"));
             histos_2d[layer].emplace_back(df_module.Histo2D<ROOT::RVec<uint16_t>, ROOT::RVec<uint16_t>>({h_adc_vs_strip_name.c_str(), (h_adc_vs_strip_name + std::string(";strip;adc;Entries")).c_str(),  MAX_SISTRIPS_PER_MODULE, 0, static_cast<double>(MAX_SISTRIPS_PER_MODULE), 256, 0, 256}, "sistrip_module", "adc_module"));
             histos_2d[layer].emplace_back(df_module.Histo2D<ROOT::RVec<size_t>, ROOT::RVec<uint32_t>>({h_cluster_adc_vs_size_name.c_str(), (h_cluster_adc_vs_size_name + std::string(";size;adc;Entries")).c_str(), 100, 0, 100, 3000, 0, 3000}, "cluster_size_module", "cluster_adc_module"));
+
+            if (layer % 2 == 0) {
+                std::string h_x_vs_strip_name = Form("x vs strip Layer %d Row %d Column %d", layer, row, col);
+                auto df_debug = df_module.Define("x_module", Form("x[(layer == %d) && (row == %d) && (column == %d) && is_vertical]", layer, row, col));
+                histos_2d[layer].emplace_back(df_debug.Histo2D<ROOT::RVec<uint16_t>, ROOT::RVec<double>>({h_x_vs_strip_name.c_str(), (h_x_vs_strip_name + std::string(";strip;x [cm];Entries")).c_str(), MAX_SISTRIPS_PER_MODULE, 0, static_cast<double>(MAX_SISTRIPS_PER_MODULE), 1000, x_min, x_max}, "sistrip_module", "x_module"));
+            }
+            else {
+                std::string h_y_vs_strip_name = Form("y vs strip Layer %d Row %d Column %d", layer, row, col);
+                auto df_debug = df_module.Define("y_module", Form("y[(layer == %d) && (row == %d) && (column == %d) && (is_vertical == false)]", layer, row, col));
+                histos_2d[layer].emplace_back(df_debug.Histo2D<ROOT::RVec<uint16_t>, ROOT::RVec<double>>({h_y_vs_strip_name.c_str(), (h_y_vs_strip_name + std::string(";strip;y [cm];Entries")).c_str(), MAX_SISTRIPS_PER_MODULE, 0, static_cast<double>(MAX_SISTRIPS_PER_MODULE), 1000, y_min, y_max}, "sistrip_module", "y_module"));
+            }
         }
     }
 

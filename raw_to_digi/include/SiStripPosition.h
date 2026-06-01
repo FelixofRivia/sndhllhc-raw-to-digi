@@ -43,7 +43,8 @@ ROOT::Math::XYZPoint GetSiStripPosition(uint32_t detector_id) {
     }
 
     // Knowing the strip, get the postion along the module
-    double local_mid_pos[3] = {0.0, (strip - (MAX_SISTRIPS_PER_MODULE / 2)) * (SENSOR_LENGHT_CM / MAX_SISTRIPS_PER_MODULE), 0.0};
+    const double strip_offset = static_cast<double>(strip) - MAX_SISTRIPS_PER_MODULE / 2.0;
+    double local_mid_pos[3] = {0.0, -(strip_offset * SENSOR_LENGTH_CM / MAX_SISTRIPS_PER_MODULE), 0.0};
     double global_mid_pos[3];
     nav->LocalToMaster(local_mid_pos, global_mid_pos);
 

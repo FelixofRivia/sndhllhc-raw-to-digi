@@ -99,10 +99,14 @@ SiStripClusteringProducts SiStripDigiClustering::operator()(const std::vector<Si
 
             if (sum_signal > threshold)
             {   
+                size_t digi_with_most_signal{cluster.front()};
                 for (auto idx : cluster) {
                     clustered_output.push_back(digis[idx]);
+                    if (digis[idx].GetSignal() > digis[digi_with_most_signal].GetSignal()) {
+                        digi_with_most_signal = idx;
+                    }
                 }
-                clusters.emplace_back(sum_signal, cluster.size(), mod.layer, mod.row, mod.col);
+                clusters.emplace_back(digis[digi_with_most_signal].GetDetectorId(), sum_signal, cluster.size(), mod.layer, mod.row, mod.col, digis[digi_with_most_signal].IsVertical());
             }
             else
             {

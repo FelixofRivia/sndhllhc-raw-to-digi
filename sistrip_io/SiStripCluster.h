@@ -15,21 +15,25 @@ struct Module {
 
 class SiStripCluster {
 public:
-    SiStripCluster(uint32_t adc, size_t size, int layer, int row, int column) : 
-        adc_(adc), size_(size), layer_(layer), row_(row), column_(column) {}
+    SiStripCluster(uint32_t detector_id, uint32_t adc, size_t size, int layer, int row, int column, bool is_vertical) : 
+        detector_id_(detector_id), adc_(adc), size_(size), layer_(layer), row_(row), column_(column), is_vertical_(is_vertical) {}
 
-    uint32_t GetSignal() const { return adc_; }
-    size_t GetSize() const { return size_; }
-    int GetLayer() const { return layer_; }
-    int GetRow() const { return row_; }
-    int GetColumn() const { return column_; }
+    inline uint32_t GetDetectorId() const { return detector_id_; }
+    inline uint32_t GetSignal() const { return adc_; }
+    inline size_t GetSize() const { return size_; }
+    inline int GetLayer() const { return layer_; }
+    inline int GetRow() const { return row_; }
+    inline int GetColumn() const { return column_; }
+    inline int IsVertical() const { return is_vertical_; }
 
 private:
+    uint32_t detector_id_; // Of the strip with most adc
     uint32_t adc_;
     size_t size_;
     int layer_;
     int row_;
     int column_;
+    bool is_vertical_;
 };
 
 struct SiStripClusteringProducts {
