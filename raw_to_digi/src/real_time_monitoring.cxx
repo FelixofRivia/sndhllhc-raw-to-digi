@@ -84,7 +84,7 @@ int main(int argc, char* argv[]){
         .Define("cluster_layer", ExtractRVec<SiStripCluster, int>(&SiStripCluster::GetLayer), {"Cluster"})
         .Define("cluster_row", ExtractRVec<SiStripCluster, int>(&SiStripCluster::GetRow), {"Cluster"})
         .Define("cluster_column", ExtractRVec<SiStripCluster, int>(&SiStripCluster::GetColumn), {"Cluster"})
-        .Define("cluster_detector_id", ExtractRVec<SiStripCluster, uint32_t>(&SiStripCluster::GetColumn), {"Cluster"})
+        .Define("cluster_detector_id", ExtractRVec<SiStripCluster, uint32_t>(&SiStripCluster::GetDetectorId), {"Cluster"})
         .Define("cluster_is_vertical", ExtractRVec<SiStripCluster, bool>(&SiStripCluster::IsVertical), {"Cluster"})
         .Define("cluster_position", [](const ROOT::VecOps::RVec<uint32_t>& detids) {return ROOT::VecOps::Map(detids, GetSiStripPosition);}, {"cluster_detector_id"})
         .Define("cluster_x", [](const ROOT::VecOps::RVec<ROOT::Math::XYZPoint>& points) {return ROOT::VecOps::Map(points, [](const auto& p) { return p.X(); });}, {"cluster_position"})
@@ -137,16 +137,16 @@ int main(int argc, char* argv[]){
         }, {"adc", "layer"});
 
 
-    histos_1d_global.emplace_back(df3.Histo1D<ROOT::RVec<int>>({"layer", "layer;layer;Entries", max_layer + 1, 0, static_cast<double>(max_layer + 1)}, "layer"));
-    histos_1d_global.emplace_back(df3.Histo1D<ROOT::RVec<uint32_t>>({"det_id (advsndsw)", "det_id (advsndsw);det_id;Entries", 18000, 0, 180000}, "detector_id"));
-    histos_2d_global.emplace_back(df4.Histo2D<ROOT::RVec<int>, ROOT::RVec<float>>({"saturated percentage (adc > 253) vs layer", "saturated percentage (adc > 253) vs layer;layer;saturated %", max_layer + 1, 0, static_cast<double>(max_layer + 1), 101, 0, 101}, "layer_vec", "saturated_percentage_vec"));
-    histos_2d_global.emplace_back(df4.Histo2D<ROOT::RVec<int>, ROOT::RVec<uint32_t>>({"adc sum vs layer", "adc sum vs layer;layer;adc sum", max_layer + 1, 0, static_cast<double>(max_layer + 1), 1000, 0, 30000}, "layer_vec", "adc_vec"));
-
     histos_1d_global.emplace_back(df3.Histo1D<ROOT::RVec<double>>({"x", "x;x [cm];Entries", 1000, x_min, x_max}, "x_vertical"));
     histos_1d_global.emplace_back(df3.Histo1D<ROOT::RVec<double>>({"y", "y;y [cm];Entries", 1000, y_min, y_max}, "y_not_vertical"));
     histos_1d_global.emplace_back(df3.Histo1D<ROOT::RVec<double>>({"z", "z;z [cm];Entries", 1000, z_min, z_max}, "z"));
     histos_2d_global.emplace_back(df4.Histo2D<ROOT::RVec<double>, ROOT::RVec<double>>({"x vs z", "x vs z;z [cm];x [cm]", 1000, z_min, z_max, 1000, x_min, x_max}, "z_vertical", "x_vertical"));
     histos_2d_global.emplace_back(df4.Histo2D<ROOT::RVec<double>, ROOT::RVec<double>>({"y vs z", "y vs z;z [cm];y [cm]", 1000, z_min, z_max, 1000, y_min, y_max}, "z_not_vertical", "y_not_vertical"));
+
+    histos_1d_global.emplace_back(df3.Histo1D<ROOT::RVec<int>>({"layer", "layer;layer;Entries", max_layer + 1, 0, static_cast<double>(max_layer + 1)}, "layer"));
+    histos_1d_global.emplace_back(df3.Histo1D<ROOT::RVec<uint32_t>>({"det_id (advsndsw)", "det_id (advsndsw);det_id;Entries", 18000, 0, 180000}, "detector_id"));
+    histos_2d_global.emplace_back(df4.Histo2D<ROOT::RVec<int>, ROOT::RVec<float>>({"saturated percentage (adc > 253) vs layer", "saturated percentage (adc > 253) vs layer;layer;saturated %", max_layer + 1, 0, static_cast<double>(max_layer + 1), 101, 0, 101}, "layer_vec", "saturated_percentage_vec"));
+    histos_2d_global.emplace_back(df4.Histo2D<ROOT::RVec<int>, ROOT::RVec<uint32_t>>({"adc sum vs layer", "adc sum vs layer;layer;adc sum", max_layer + 1, 0, static_cast<double>(max_layer + 1), 1000, 0, 30000}, "layer_vec", "adc_vec"));
 
     ROOT::RDF::TProfile1DModel saturation_model(
         "saturated percentage (adc > 253) vs layer (profiled)",
@@ -245,6 +245,26 @@ int main(int argc, char* argv[]){
         h->SetFillColor(kAzure - 9);
         h->Write();
     }
+
+    // Trigger evaluation and get raw pointers  
+    auto hX = histos_1d_global[0].GetPtr();  // "x" from x_vertical  
+    auto hY = histos_1d_global[1].GetPtr();  // "y" from y_not_vertical  
+    
+    TH2D* h2 = new TH2D("beam spot", "beam spot;x [cm];y [cm]",  
+        200, hX->GetXaxis()->GetXmin(), hX->GetXaxis()->GetXmax(),  // reduced from 1000  
+        200, hY->GetXaxis()->GetXmin(), hY->GetXaxis()->GetXmax()  
+    );  
+    
+    for (int i = 1; i <= h2->GetNbinsX(); i++) {  
+        for (int j = 1; j <= h2->GetNbinsY(); j++) {  
+            // Interpolate since we're changing bin count from 1000 to 200  
+            double x = h2->GetXaxis()->GetBinCenter(i);  
+            double y = h2->GetYaxis()->GetBinCenter(j);  
+            h2->SetBinContent(i, j, hX->Interpolate(x) * hY->Interpolate(y));  
+        }  
+    }
+
+    h2->Write();
 
     for (auto& h : histos_2d_global) {
         h->Write();
