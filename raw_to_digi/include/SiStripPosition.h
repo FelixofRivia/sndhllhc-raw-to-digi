@@ -44,7 +44,16 @@ ROOT::Math::XYZPoint GetSiStripPosition(uint32_t detector_id) {
 
     // Knowing the strip, get the postion along the module
     const double strip_offset = static_cast<double>(strip) - MAX_SISTRIPS_PER_MODULE / 2.0;
-    double local_mid_pos[3] = {0.0, -(strip_offset * SENSOR_LENGTH_CM / MAX_SISTRIPS_PER_MODULE), 0.0};
+    // Retrieve module orientation (test beam 2026)
+    // bool is_positive;
+    // if (layer % 4 < 2) {
+    //     is_positive = ((layer + row + column) % 2 == 0);
+    // }
+    // else {
+    //     is_positive = ((layer + row + column) % 2 == 1);
+    // }
+    // const double orientation = is_positive ? 1.0 : -1.0;
+    double local_mid_pos[3] = {0.0, (strip_offset * SENSOR_LENGTH_CM / MAX_SISTRIPS_PER_MODULE), 0.0};
     double global_mid_pos[3];
     nav->LocalToMaster(local_mid_pos, global_mid_pos);
 
