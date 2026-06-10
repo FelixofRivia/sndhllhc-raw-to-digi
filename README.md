@@ -3,7 +3,7 @@
 Performs standalone raw-to-digi conversion and real-time data quality monitoring for silicon strip (SiStrip) data in the SND@HL-LHC experiment.
 Input raw data is produced by CMS DAQ. Currently only Zero Suppressed DAQ mode (used for physics) is supported.
 <p align="center">
-  <img src="docs/images/SiStrip_pipeline.png" alt="Digitization pipeline" width="800"/>
+  <img src="docs/images/SiStrip_pipeline.png" alt="Digitization pipeline" width="900"/>
 </p>
 
 ## Features
