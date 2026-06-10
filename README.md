@@ -44,17 +44,31 @@ ctest # optionally
 
 ## Run instructions
 ### SiStrip raw-to-digi conversion
-`./bin/raw_to_digi <input_root_file> <detector_info> <output_root_file> <format: ttree|rntuple>`  
+```
+./bin/raw_to_digi <input_root_file> <detector_info> <output_root_file> <format: ttree|rntuple>
+``` 
 For example:  
-`./bin/raw_to_digi tests/data/run_000375_raw.root tests/data/detector_info_tb2026.csv tests/data/run_000375_digi.root rntuple`
+```
+./bin/raw_to_digi tests/data/run_000375_raw.root tests/data/detector_info_tb2026.csv tests/data/run_000375_digi.root rntuple
+```
 ### Real-time ata quality monitoring
-`./bin/real_time_monitoring <input_root_file> <detector_info> <geometry_file> <output_histos_root_file> <n_treads>`  
+```
+./bin/real_time_monitoring <input_root_file> <detector_info> <geometry_file> <output_histos_root_file> <n_treads>
+```
 For example:  
-`./bin/real_time_monitoring tests/data/run000375_digi_rntuple.root tests/data/detector_info_tb2026.csv tests/data/geofile_testbeam_2026.root tests/data/histos.root 2`
+```
+./bin/real_time_monitoring tests/data/run000375_digi_rntuple.root tests/data/detector_info_tb2026.csv tests/data/geofile_testbeam_2026.root tests/data/histos.root 2
+```
 ### Dump info from raw data
-`./bin/raw_info_dump <input_root_file>`  
+```
+./bin/raw_info_dump <input_root_file>
+```
 For example:  
-`./bin/raw_info_dump tests/data/run_00375_raw.root`
+```
+./bin/raw_info_dump tests/data/run_00375_raw.root
+```
 ### Monitoring daemon
 NOTE: requires CMSSW if raw events are not built already  
-`python processing_pipeline.py`
+```
+python processing_pipeline.py
+```
