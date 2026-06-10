@@ -56,7 +56,7 @@ int main(int argc, char* argv[]){
 
     size_t csv_row_index{0};
 
-    for(int i{0}; i < input_raw_tree->GetEntries() && i < 10; ++i){
+    for(int i{0}; i < input_raw_tree->GetEntries(); ++i){
         input_raw_tree->GetEntry(i);
         if (!raw_data){
             std::cerr << "raw_data is nullptr\n";
@@ -72,7 +72,7 @@ int main(int argc, char* argv[]){
                     for (size_t byte_index{raw_index}; byte_index < raw_index + 8; ++byte_index) {
                         data = to_hex(static_cast<int>(feds[fed_index].data_[byte_index]), 2) + data;
                     }
-                    std::string csv_row_to_compare = std::to_string(i+1) + std::string(",") + std::to_string(fed_index) + std::string(",") + to_hex(raw_index / 8, 4) + std::string(",") + data; // + std::string("\n");
+                    std::string csv_row_to_compare = std::to_string(i+1) + std::string(",") + std::to_string(fed_index) + std::string(",") + to_hex(raw_index / 8, 4) + std::string(",") + data;
                     if (csv_row_to_compare != csv_rows[csv_row_index]) {
                         std::cerr << "Row number " << csv_row_index + 1 << " does not match:\nExpected:\t" << csv_rows[csv_row_index] << "\nProduced:\t" << csv_row_to_compare << "\n";
                         return 1;

@@ -11,7 +11,7 @@
 #include "SiStripIOHeaders.h"
 #include "SiStripRawToDigi.h"
 
-// .csv table: event number, strip, adc
+// .csv table: event number, fed key, strip, adc
 
 int main(int argc, char* argv[]){
     if (argc != 4) {
