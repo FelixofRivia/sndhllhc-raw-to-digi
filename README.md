@@ -56,5 +56,5 @@ For example:
 For example:  
 `./bin/raw_info_dump tests/data/run_00375_raw.root`
 ### Monitoring daemon
-NOTE: requires CMSSW if raw events are not built already
+NOTE: requires CMSSW if raw events are not built already  
 `python processing_pipeline.py`
