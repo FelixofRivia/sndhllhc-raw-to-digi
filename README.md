@@ -19,7 +19,7 @@ Input raw data is produced by CMS DAQ. Currently only Zero Suppressed DAQ mode (
 - `CMake` 3.23 or later
 - [ROOT](https://root.cern.ch/) 6.36 or later
 ### Raw event building (optional)
-- [CMSSW](https://github.com/cms-sw/cmssw)
+- [CMSSW](https://github.com/cms-sw/cmssw) 15.3.0 or later
 ### Monitoring daemon (optional)
 - `python` with `pandas`
 
