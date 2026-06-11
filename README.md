@@ -7,7 +7,7 @@ Input raw data is produced by CMS DAQ. Currently only Zero Suppressed DAQ mode (
 </p>
 
 <p align="center">
-  <img src="docs/images/daemon.png" alt="Monitoring daemon for real-time data processing" width="700"/>
+  <img src="docs/images/daemon.png" alt="Monitoring daemon for real-time data processing" width="500"/>
 </p>
 
 ## Features
