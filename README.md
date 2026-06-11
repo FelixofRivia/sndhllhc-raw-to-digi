@@ -4,10 +4,12 @@ Performs standalone raw-to-digi conversion and real-time data quality monitoring
 Input raw data is produced by CMS DAQ. Currently only Zero Suppressed DAQ mode (used for physics) is supported.
 <p align="center">
   <img src="docs/images/SiStrip_pipeline.png" alt="Digitization pipeline" width="900"/>
+  <p align="center"><em>Raw to digi data processing pipeline</em></p>
 </p>
 
 <p align="center">
   <img src="docs/images/daemon.png" alt="Monitoring daemon for real-time data processing" width="500"/>
+  <p align="center"><em>Monitoring daemon for real-time data processing</em></p>
 </p>
 
 ## Features
