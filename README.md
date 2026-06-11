@@ -57,7 +57,7 @@ For example:
 ```
 ./bin/raw_to_digi tests/data/run_000375_raw.root tests/data/detector_info_tb2026.csv tests/data/run_000375_digi.root rntuple
 ```
-### Real-time ata quality monitoring
+### Real-time data quality monitoring
 ```
 ./bin/real_time_monitoring <input_root_file> <detector_info> <geometry_file> <output_histos_root_file> <n_treads>
 ```
