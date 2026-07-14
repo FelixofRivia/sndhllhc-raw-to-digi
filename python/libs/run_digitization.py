@@ -6,7 +6,7 @@ def run_digitization(directories, run_number):
     tag = f"[run {run_number:06d}]"
 
     input_root_file = (directories['converted'] / f"run{run_number:06d}" / f"run{run_number:06d}_converted.root")
-    detinfo_csv = "./../tests/data/detector_info_tb2026.csv"
+    detinfo_csv = "./../tests/data/detector_info_tb_5_2026.csv"
     modes = ["rntuple", "ttree"]
 
     for mode in modes:

@@ -41,7 +41,7 @@ auto ExtractRVec(Method method)
 int main(int argc, char* argv[]){
     if (argc != 6) {
         std::cerr << "5 arguments expected but " << argc - 1 << " provided\n";
-        std::cerr << "Usage: real_time_monitoring <input_root_file> <detector_info> <geometry_file> <output_histos_root_file> <n_treads>\n";
+        std::cerr << "Usage: " << argv[0] << " <input_root_file> <detector_info> <geometry_file> <output_histos_root_file> <n_treads>\n";
         return 1;
     }
     std::string input_root_file(argv[1]);

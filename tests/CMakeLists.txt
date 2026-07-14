@@ -17,10 +17,10 @@ add_executable(check_digi_conversion check_digi_conversion.cxx ${CMAKE_SOURCE_DI
 target_link_libraries(check_digi_conversion PRIVATE ${ROOT_LIBRARIES} sistrip_io)
 target_include_directories(check_digi_conversion PRIVATE ${ROOT_INCLUDE_DIRS} ${CMAKE_SOURCE_DIR}/raw_to_digi/include ${CMAKE_SOURCE_DIR}/sistrip_io)
 add_dependencies(check_digi_conversion copy_test_data)
-add_test(NAME check_digi_conversion COMMAND $<TARGET_FILE:check_digi_conversion> ${CMAKE_CURRENT_BINARY_DIR}/data/run000375_raw.root ${CMAKE_CURRENT_BINARY_DIR}/data/detector_info_tb2026.csv ${CMAKE_CURRENT_BINARY_DIR}/data/run000375_digi_dump_from_cmssw.csv)
+add_test(NAME check_digi_conversion COMMAND $<TARGET_FILE:check_digi_conversion> ${CMAKE_CURRENT_BINARY_DIR}/data/run000375_raw.root ${CMAKE_CURRENT_BINARY_DIR}/data/detector_info_tb_5_2026.csv ${CMAKE_CURRENT_BINARY_DIR}/data/run000375_digi_dump_from_cmssw.csv)
 
 add_executable(check_output_write_read check_output_write_read.cxx ${CMAKE_SOURCE_DIR}/raw_to_digi/src/SiStripFEDBuffer.cxx)
 target_link_libraries(check_output_write_read PRIVATE ${ROOT_LIBRARIES} sistrip_io)
 target_include_directories(check_output_write_read PRIVATE ${ROOT_INCLUDE_DIRS} ${CMAKE_SOURCE_DIR}/raw_to_digi/include ${CMAKE_SOURCE_DIR}/sistrip_io)
 add_dependencies(check_output_write_read copy_test_data)
-add_test(NAME check_output_write_read COMMAND $<TARGET_FILE:check_output_write_read> ${CMAKE_CURRENT_BINARY_DIR}/data/run000375_raw.root ${CMAKE_CURRENT_BINARY_DIR}/data/detector_info_tb2026.csv ${CMAKE_CURRENT_BINARY_DIR}/data)
+add_test(NAME check_output_write_read COMMAND $<TARGET_FILE:check_output_write_read> ${CMAKE_CURRENT_BINARY_DIR}/data/run000375_raw.root ${CMAKE_CURRENT_BINARY_DIR}/data/detector_info_tb_5_2026.csv ${CMAKE_CURRENT_BINARY_DIR}/data)

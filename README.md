@@ -55,7 +55,7 @@ ctest # optionally
 ``` 
 For example:  
 ```
-./bin/raw_to_digi tests/data/run_000375_raw.root tests/data/detector_info_tb2026.csv tests/data/run_000375_digi.root rntuple
+./bin/raw_to_digi tests/data/run_000375_raw.root tests/data/detector_info_tb_5_2026.csv tests/data/run_000375_digi.root rntuple
 ```
 ### Real-time data quality monitoring
 ```
@@ -63,7 +63,7 @@ For example:
 ```
 For example:  
 ```
-./bin/real_time_monitoring tests/data/run000375_digi_rntuple.root tests/data/detector_info_tb2026.csv tests/data/geofile_testbeam_2026.root tests/data/histos.root 2
+./bin/real_time_monitoring tests/data/run000375_digi_rntuple.root tests/data/detector_info_tb_5_2026.csv tests/data/geofile_testbeam_2026.root tests/data/histos.root 2
 ```
 ### Dump info from raw data
 ```

@@ -10,7 +10,7 @@
 int main(int argc, char* argv[]){
     if (argc != 5) {
         std::cerr << "4 arguments expected but " << argc - 1 << " provided\n";
-        std::cerr << "Usage: raw_to_digi <input_root_file> <detector_info> <output_root_file> <format: ttree|rntuple>\n";
+        std::cerr << "Usage: " << argv[0] << " <input_root_file> <detector_info> <output_root_file> <format: ttree|rntuple>\n";
         return 1;
     }
     std::string input_path(argv[1]);

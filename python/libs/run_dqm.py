@@ -7,7 +7,7 @@ def run_dqm(directories, run_number):
 
     input_root_file = directories['converted'] / f"run{run_number:06d}" / f"run{run_number:06d}_digi_rntuple.root"
     output_root_file = directories['histos'] / f"run{run_number:06d}_dqm.root"
-    detinfo_csv = "./../tests/data/detector_info_tb2026.csv"
+    detinfo_csv = "./../tests/data/detector_info_tb_5_2026.csv"
 
     command = f"./../build/bin/real_time_monitoring {input_root_file} {detinfo_csv} {directories['geometry']} {output_root_file} 2"
 
