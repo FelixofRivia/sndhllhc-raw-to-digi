@@ -23,7 +23,7 @@ def main():
         format="%(asctime)s [%(levelname)s] %(message)s",
         datefmt="%H:%M:%S",
         handlers=[
-            logging.FileHandler(directories["logs"] / "processing_pipeline_log.txt", mode="a"),  # append mode
+            logging.FileHandler(directories["logs"] / "processing_pipeline.log", mode="a"),  # append mode
             logging.StreamHandler(sys.stdout)          # still print to terminal
         ]
     )
