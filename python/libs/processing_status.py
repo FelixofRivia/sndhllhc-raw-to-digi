@@ -43,15 +43,15 @@ def create_status_table(directories):
         digi_mtime = file_modified_time(digi_file)
         dqm_mtime = file_modified_time(dqm_file)
 
-        converted_up_to_date = (n_raw == n_jsn)
+        converted_up_to_date = ((n_raw == n_jsn) and converted_exists)
         digi_up_to_date = False
         dqm_up_to_date = False
 
         if converted_exists and digi_exists:
-            digi_up_to_date = digi_mtime >= converted_mtime
+            digi_up_to_date = (digi_mtime >= converted_mtime and (n_raw == n_jsn))
 
         if converted_exists and digi_exists and dqm_exists:
-            dqm_up_to_date = (dqm_mtime >= converted_mtime and dqm_mtime >= digi_mtime)
+            dqm_up_to_date = (dqm_mtime >= converted_mtime and dqm_mtime >= digi_mtime and (n_raw == n_jsn))
 
         rows.append({
             "run": run_number,
